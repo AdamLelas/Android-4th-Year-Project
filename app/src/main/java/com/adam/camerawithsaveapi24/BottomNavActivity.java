@@ -29,9 +29,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class BottomNavActivity extends AppCompatActivity {
-
+    //TODO: Remove Text and Image if not used
     private TextView mTextMessage;
     private ImageView mImageView;
+
+    private String mCurrentPhotoPath;
+    static final int REQUEST_IMAGE_CAPTURE = 1001;
+    static final int REQUEST_TAKE_PHOTO = 1;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -40,7 +44,6 @@ public class BottomNavActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
-
                     return true;
 
                 case R.id.navigation_notifications:
@@ -68,16 +71,16 @@ public class BottomNavActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //TODO: Maybe remove casts
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bottom_nav);
-        mImageView = (ImageView) this.findViewById(R.id.mImageView);
+        mImageView = (ImageView) findViewById(R.id.mImageView);
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-    static final int REQUEST_TAKE_PHOTO = 1;
+
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -102,7 +105,6 @@ public class BottomNavActivity extends AppCompatActivity {
         }
     }
 
-    String mCurrentPhotoPath;
 
     private File createImageFile() throws IOException {
         // Create an image file name
@@ -116,11 +118,6 @@ public class BottomNavActivity extends AppCompatActivity {
                 return null;
             }
         }
-
-//        File imageFile = new File(storageDir.getPath()
-//                + File.separator
-//                + imageFileName
-//        );
 
         File image = File.createTempFile(imageFileName,
                                     ".jpg",
@@ -136,18 +133,20 @@ public class BottomNavActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-            // Show the thumbnail on ImageView
-            Uri imageUri = Uri.parse(mCurrentPhotoPath);
-            File file = new File(imageUri.getPath());
-            try {
-                InputStream ims = new FileInputStream(file);
-//                Bitmap bm = BitmapFactory.decodeFile(mCurrentPhotoPath);
-//                mImageView.setImageBitmap(bm);
-                  mImageView.setImageBitmap(BitmapFactory.decodeStream(ims));
-            } catch (FileNotFoundException e) {
-                return;
-            }
 
+//            TODO: REMOVE COMMENTED OUT CODE
+            // Show the thumbnail on ImageView
+//            Uri imageUri = Uri.parse(mCurrentPhotoPath);
+//            File file = new File(imageUri.getPath());
+//            try {
+////                InputStream ims = new FileInputStream(file);
+////                Bitmap bm = BitmapFactory.decodeFile(mCurrentPhotoPath);
+////                mImageView.setImageBitmap(bm);
+////                mImageView.setImageBitmap(BitmapFactory.decodeStream(ims));
+//            } catch (FileNotFoundException e) {
+//                return;
+//            }
+//TODO: Send image to clarifai, wait for response then move to displayPhotoActivity
             Intent displayPhotoIntent = new Intent(this, PhotoDisplayActivity.class);
             displayPhotoIntent.putExtra("fpath", mCurrentPhotoPath);
             startActivity(displayPhotoIntent);

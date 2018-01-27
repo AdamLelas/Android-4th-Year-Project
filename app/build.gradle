@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 26
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.adam.camerawithsaveapi24"
         minSdkVersion 24
@@ -9,6 +10,9 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        vectorDrawables.useSupportLibrary =
+                true
     }
     buildTypes {
         release {
@@ -16,6 +20,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        lintConfig rootProject.file('gradle/lint.xml')
+    } // needed to suppress Okio's lint errors
+
 }
 
 dependencies {
@@ -27,4 +35,27 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+
+    compile(
+            "com.android.support:recyclerview-v7:24.2.1",
+
+            "com.clarifai.clarifai-api2:core:2.2.+",
+
+            // For logging our HTTP outbound + inbound data
+            "com.jakewharton.timber:timber:4.3.0",
+            "com.squareup.okhttp3:logging-interceptor:3.4.1",
+
+            // For runtime permissions on Marshmallow and above
+            "io.reactivex:rxjava:1.1.10",
+            "com.tbruyelle.rxpermissions:rxpermissions:0.7.1@aar"
+    )
+    compile("com.mikepenz:materialdrawer:5.6.0") { transitive = true }
+
+
+    // For getting views without clunky findViewById
+    compile "com.jakewharton:butterknife:8.5.1"
+    compile 'com.android.support:design:26.1.0'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support:support-vector-drawable:26.1.0'
+    annotationProcessor "com.jakewharton:butterknife-compiler:8.5.1"
 }
