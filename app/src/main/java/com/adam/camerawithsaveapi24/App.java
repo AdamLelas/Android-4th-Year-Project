@@ -33,6 +33,8 @@ public class App extends Application {
 
     @Override
     public void onCreate() {
+        super.onCreate();
+
         INSTANCE = this;
         client = new ClarifaiBuilder(getString(R.string.clarifai_api_key))
                 // Optionally customize HTTP client via a custom OkHttp instance
@@ -50,7 +52,6 @@ public class App extends Application {
                         .build()
                 )
                 .buildSync(); // use build() instead to get a Future<ClarifaiClient>, if you don't want to block this thread
-        super.onCreate();
 
         // Initialize our logging
         Timber.plant(new Timber.DebugTree());
