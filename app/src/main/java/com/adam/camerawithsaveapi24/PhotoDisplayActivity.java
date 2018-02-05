@@ -1,6 +1,7 @@
 package com.adam.camerawithsaveapi24;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,8 +11,11 @@ import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,11 +40,8 @@ public class PhotoDisplayActivity extends AppCompatActivity {
     private Button b3;
     private Button noneOfThese;
     private ImageView imageView;
+    private ProgressBar dialog;
 
-
-
-    @NonNull
-    private final RecognizeConceptsAdapter adapter = new RecognizeConceptsAdapter();
 
     protected byte[] getBytesFromFile(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -60,6 +61,7 @@ public class PhotoDisplayActivity extends AppCompatActivity {
         b2 = findViewById(R.id.button2);
         b3 = findViewById(R.id.button3);
         noneOfThese = findViewById(R.id.button4);
+        dialog = findViewById(R.id.progressBar);
 
         Intent intent = getIntent();
         fpath = intent.getStringExtra("fpath");
@@ -68,28 +70,42 @@ public class PhotoDisplayActivity extends AppCompatActivity {
         imageView.setImageBitmap(bm);
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        hideButtons();
+        onImagePicked(imageBytes);
+    }
+
+
+
     public void changeButtonText(){
+        showButtons();
         b1.setText(concepts.get(0).name());
         b2.setText(concepts.get(1).name());
         b3.setText(concepts.get(2).name());
     }
-    
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        onImagePicked(imageBytes);
+    protected void hideButtons(){
+        b1.setVisibility(View.GONE);
+        b2.setVisibility(View.GONE);
+        b3.setVisibility(View.GONE);
+        noneOfThese.setVisibility(View.GONE);
+    }
+    protected void showButtons(){
+        dialog.setVisibility(View.GONE);
+        b1.setVisibility(View.VISIBLE);
+        b2.setVisibility(View.VISIBLE);
+        b3.setVisibility(View.VISIBLE);
+        noneOfThese.setVisibility(View.VISIBLE);
+
     }
 
     // TODO:
     @SuppressLint("StaticFieldLeak")
     private void onImagePicked(@NonNull final byte[] imageBytes) {
-        setBusy(true);
 
-        // Clear Concept List, just in case its still holding data from before
-        adapter.setData(Collections.<Concept>emptyList());
-
-        final AsyncTask<Void, Void, ClarifaiResponse<List<ClarifaiOutput<Concept>>>> execute = new AsyncTask<Void, Void, ClarifaiResponse<List<ClarifaiOutput<Concept>>>>() {
+        new AsyncTask<Void, Void, ClarifaiResponse<List<ClarifaiOutput<Concept>>>>() {
             @Override
             protected ClarifaiResponse<List<ClarifaiOutput<Concept>>> doInBackground(Void... params) {
                 // The default Clarifai model that identifies concepts in images
@@ -103,7 +119,7 @@ public class PhotoDisplayActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(ClarifaiResponse<List<ClarifaiOutput<Concept>>> response) {
-                setBusy(false);
+//                setBusy(false);
                 if (!response.isSuccessful()) {
                     showErrorSnackbar(R.string.error_while_contacting_api);
                     return;
@@ -113,9 +129,7 @@ public class PhotoDisplayActivity extends AppCompatActivity {
                     showErrorSnackbar(R.string.no_results_from_api);
                     return;
                 }
-                adapter.setData(predictions.get(0).data());
                 concepts = predictions.get(0).data();
-                adapter.printToConsole();
                 changeButtonText();
             }
 
@@ -130,15 +144,15 @@ public class PhotoDisplayActivity extends AppCompatActivity {
     }
 
 
-    private void setBusy(final boolean busy) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+//    private void setBusy(final boolean busy) {
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
 //                switcher.setDisplayedChild(busy ? 1 : 0);
 //                imageView.setVisibility(busy ? GONE : VISIBLE);
 //                fab.setEnabled(!busy);
-            }
-        });
-    }
+//            }
+//        });
+//    }
 
 }
