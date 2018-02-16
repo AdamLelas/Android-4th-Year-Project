@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -15,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.adam.camerawithsaveapi24.BottomNavActivity"
+            android:name=".BottomNavActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,7 +35,8 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name="com.adam.camerawithsaveapi24.PhotoDisplayActivity" />
+        <activity android:name=".PhotoDisplayActivity" />
+
     </application>
 
 </manifest>

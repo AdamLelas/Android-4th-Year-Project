@@ -1,10 +1,16 @@
 <resources>
-    <string name="app_name">CameraWithSaveAPI24+</string>
+    <string name="app_name">Adam Y4P</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
 
-    <string name="title_activity_fullscreen">FullscreenActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string name="clarifai_api_key">c9f766bae4bb49b79f393104273a8a4b</string>
+    <string name="error_external_storage_permission_not_granted">You must accept this permission so we can upload your images!</string>
+    <string name="error_while_contacting_api">Error while contacting Clarifai API</string>
+    <string name="no_results_from_api">API did not return any results</string>
+    <string name="upload_image_hint">Click the button in the bottom-right corner to upload an image!</string>
+    <string name="none_of_these">None of these</string>
+
+
 </resources>

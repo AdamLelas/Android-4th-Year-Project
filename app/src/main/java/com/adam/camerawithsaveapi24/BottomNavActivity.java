@@ -3,6 +3,7 @@ package com.adam.camerawithsaveapi24;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,7 +20,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,9 +30,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class BottomNavActivity extends AppCompatActivity {
-
+    //TODO: Remove Text and Image if not used
     private TextView mTextMessage;
     private ImageView mImageView;
+
+    private String mCurrentPhotoPath;
+    static final int REQUEST_IMAGE_CAPTURE = 1001;
+    static final int REQUEST_TAKE_PHOTO = 1;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -40,7 +45,6 @@ public class BottomNavActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
-
                     return true;
 
                 case R.id.navigation_notifications:
@@ -68,16 +72,15 @@ public class BottomNavActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //TODO: Maybe remove casts
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bottom_nav);
-        mImageView = (ImageView) this.findViewById(R.id.mImageView);
+        mImageView = (ImageView) findViewById(R.id.mImageView);
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-    static final int REQUEST_TAKE_PHOTO = 1;
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -102,51 +105,51 @@ public class BottomNavActivity extends AppCompatActivity {
         }
     }
 
-    String mCurrentPhotoPath;
 
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "TEST_IMAGE_4Y_" + timeStamp + "_";
+        String imageFileName = "IMG_4YP_" + timeStamp + "_";
         File storageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES), "Cam_Save");
-        if(!storageDir.exists()){
+        if (!storageDir.exists()) {
             if (!storageDir.mkdirs()) {
                 Log.d("Y4P", "failed to create directory");
                 return null;
             }
         }
-
-//        File imageFile = new File(storageDir.getPath()
-//                + File.separator
-//                + imageFileName
-//        );
-
         File image = File.createTempFile(imageFileName,
-                                    ".jpg",
-                                        storageDir
+                ".jpg",
+                storageDir
         );
-
-        // Save a file: path for use with ACTION_VIEW intents
+        // Save file path for use to pass to other activities / methods
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
+//            TODO: REMOVE COMMENTED OUT CODE
             // Show the thumbnail on ImageView
-            Uri imageUri = Uri.parse(mCurrentPhotoPath);
-            File file = new File(imageUri.getPath());
-            try {
-                InputStream ims = new FileInputStream(file);
+//            Uri imageUri = Uri.parse(mCurrentPhotoPath);
+//            File file = new File(imageUri.getPath());
+//            try {
+//                InputStream ims = new FileInputStream(file);
 //                Bitmap bm = BitmapFactory.decodeFile(mCurrentPhotoPath);
 //                mImageView.setImageBitmap(bm);
-                  mImageView.setImageBitmap(BitmapFactory.decodeStream(ims));
-            } catch (FileNotFoundException e) {
-                return;
-            }
+//                mImageView.setImageBitmap(BitmapFactory.decodeStream(ims));
+//            } catch (FileNotFoundException e) {
+//                return;
+//            }
+
+
+//          TODO: REMOVE this?
+//            final byte[] imageBytes = createByteArray(mCurrentPhotoPath);
+//            recognizeConceptsActivity.onImagePicked(imageBytes);
 
             Intent displayPhotoIntent = new Intent(this, PhotoDisplayActivity.class);
             displayPhotoIntent.putExtra("fpath", mCurrentPhotoPath);
