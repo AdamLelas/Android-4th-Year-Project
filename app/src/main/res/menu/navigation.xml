@@ -6,25 +6,15 @@
         android:icon="@drawable/ic_home_black_24dp"
         android:title="@string/title_home" />
 
-    <!--<item-->
-    <!--android:id="@+id/navigation_dashboard"-->
-    <!--android:icon="@drawable/ic_dashboard_black_24dp"-->
-    <!--android:title="@string/title_dashboard" />-->
-
     <item
         android:id="@+id/navigation_camera"
         android:icon="@android:drawable/ic_menu_camera"
         android:title="Camera" />
 
     <item
-        android:id="@+id/navigation_notifications"
+        android:id="@+id/navigation_account_settings"
         android:icon="@drawable/ic_notifications_black_24dp"
-        android:title="@string/title_notifications" />
-
-    <!--<item-->
-    <!--android:id="@+id/navigation_settings"-->
-    <!--android:icon="@android:drawable/ic_menu_manage"-->
-    <!--android:title="Settings"/>-->
+        android:title="@string/title_account_settings" />
 
 
 </menu>

@@ -1,10 +1,9 @@
 package com.adam.camerawithsaveapi24;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,12 +19,15 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import java.io.ByteArrayOutputStream;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -33,10 +35,12 @@ public class BottomNavActivity extends AppCompatActivity {
     //TODO: Remove Text and Image if not used
     private TextView mTextMessage;
     private ImageView mImageView;
+    private FirebaseAuth mAuth;
 
     private String mCurrentPhotoPath;
     static final int REQUEST_IMAGE_CAPTURE = 1001;
     static final int REQUEST_TAKE_PHOTO = 1;
+    private String todaysLogName;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -45,9 +49,20 @@ public class BottomNavActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
+
                     return true;
 
-                case R.id.navigation_notifications:
+                case R.id.navigation_account_settings:
+                    findViewById(R.id.navigation_account_settings).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (mAuth.getCurrentUser() == null) {
+                                dispatchSignInIntent();
+                            } else {
+                                dispatchSignOutIntent();
+                            }
+                        }
+                    });
                     return true;
 
                 case R.id.navigation_camera:
@@ -70,6 +85,21 @@ public class BottomNavActivity extends AppCompatActivity {
         }
     };
 
+    protected void dispatchSignInIntent() {
+        Intent signInIntent = new Intent(this, SignInActivity.class);
+        startActivity(signInIntent);
+    }
+
+    protected void dispatchSignOutIntent() {
+        Intent signOutIntent = new Intent(this, AccountManagementActivity.class);
+        startActivity(signOutIntent);
+    }
+
+    private void dispatchSignUpIntent() {
+        Intent signUpIntent = new Intent(this, SignUpActivity.class);
+        startActivity(signUpIntent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //TODO: Maybe remove casts
@@ -79,6 +109,72 @@ public class BottomNavActivity extends AppCompatActivity {
         mTextMessage = (TextView) findViewById(R.id.message);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        mAuth = FirebaseAuth.getInstance();
+
+        try {
+            createFoodLogFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void appendFoodLogFile(String[] strArr) throws IOException {
+        String timeNow = new SimpleDateFormat("HH:mm").format(new Date());
+        if (todaysLogName != null) {
+            try {
+                FileOutputStream outputStream = openFileOutput(todaysLogName, MODE_APPEND);
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream);
+                for (String aStrArr : strArr) {
+                    outputStreamWriter.write(timeNow + ": " + aStrArr);
+                    outputStreamWriter.flush();
+                }
+                outputStreamWriter.close();
+            } catch (FileNotFoundException e) {
+                Log.e("FileNotFound: ", "File not found exception thrown");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void createFoodLogFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyy_MM_dd").format(new Date());
+        String logFileName = "foodLog_" + timeStamp + ".txt";
+        FileOutputStream outputStream;
+        todaysLogName = logFileName;
+
+        if (isFilePresent(logFileName)) {
+            Log.i("File_Exists_Already", "File: " + logFileName + " exists already");
+        } else {
+            Log.i("Creating_File:", logFileName);
+            try {
+                outputStream = openFileOutput(logFileName, Context.MODE_APPEND);
+                outputStream.write(logFileName.getBytes());
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public boolean isFilePresent(String fileName) {
+        String path = getBaseContext().getFilesDir().getAbsolutePath() + "/" + fileName;
+//        Log.i("AbsolutePath: ",  path);
+        File file = new File(path);
+        return file.exists();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser curUser = mAuth.getCurrentUser();
+        updateUI(curUser);
+    }
+
+    private void updateUI(FirebaseUser firebaseUser) {
+        if (firebaseUser != null) {
+            mTextMessage.setText(firebaseUser.getEmail().toString());
+        }
     }
 
 
@@ -126,7 +222,6 @@ public class BottomNavActivity extends AppCompatActivity {
         mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
-
 
 
     @Override

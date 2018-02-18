@@ -1,7 +1,6 @@
 package com.adam.camerawithsaveapi24;
 
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,36 +10,49 @@ import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import clarifai2.api.ClarifaiResponse;
 import clarifai2.dto.input.ClarifaiImage;
 import clarifai2.dto.input.ClarifaiInput;
 import clarifai2.dto.model.ConceptModel;
 import clarifai2.dto.model.output.ClarifaiOutput;
 import clarifai2.dto.prediction.Concept;
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
 
-public class PhotoDisplayActivity extends AppCompatActivity {
+public class PhotoDisplayActivity extends AppCompatActivity implements View.OnClickListener {
 
-    //    private DataHolder dataHolder;
+
+    private static final String TAG = "PhotoDisplayActivity";
     private String fpath;
     private byte[] imageBytes;
     protected List<Concept> concepts = new ArrayList<>();
-    private Button b1;
-    private Button b2;
-    private Button b3;
+    private Button b1, b2, b3;
     private Button noneOfThese;
     private ImageView imageView;
     private ProgressBar dialog;
+
+    //    private String queryString = null;
+    private final String NUTRITION_URL_PREFIX = "https://trackapi.nutritionix.com/v2/search/instant?query=";
+    private final String NUTRITION_URL_POSTFIX = "&branded=false";
+    private String completedQueryString;
 
 
     protected byte[] getBytesFromFile(Bitmap bitmap) {
@@ -57,11 +69,15 @@ public class PhotoDisplayActivity extends AppCompatActivity {
 
         //Set up views findViewById
         imageView = findViewById(R.id.photoDisplayView);
-        b1 = findViewById(R.id.button1);
-        b2 = findViewById(R.id.button2);
-        b3 = findViewById(R.id.button3);
-        noneOfThese = findViewById(R.id.button4);
-        dialog = findViewById(R.id.progressBar);
+        b1 = findViewById(R.id.food_select_button_one);
+        b1.setOnClickListener(this);
+        b2 = findViewById(R.id.food_select_button_two);
+        b2.setOnClickListener(this);
+        b3 = findViewById(R.id.food_select_button_three);
+        b3.setOnClickListener(this);
+
+        noneOfThese = findViewById(R.id.food_select_button_none);
+        dialog = findViewById(R.id.photo_display_progress_bar);
 
         Intent intent = getIntent();
         fpath = intent.getStringExtra("fpath");
@@ -77,31 +93,72 @@ public class PhotoDisplayActivity extends AppCompatActivity {
         onImagePicked(imageBytes);
     }
 
-
-
-    public void changeButtonText(){
+    public void changeButtonText() {
         showButtons();
         b1.setText(concepts.get(0).name());
         b2.setText(concepts.get(1).name());
         b3.setText(concepts.get(2).name());
+//        b4.setText(concepts.get(3).name());
+//        b5.setText(concepts.get(4).name());
+//        b6.setText(concepts.get(5).name());
     }
 
-    protected void hideButtons(){
+    protected void hideButtons() {
         b1.setVisibility(View.GONE);
         b2.setVisibility(View.GONE);
         b3.setVisibility(View.GONE);
+//        b4.setVisibility(View.GONE);
+//        b5.setVisibility(View.GONE);
+//        b6.setVisibility(View.GONE);
         noneOfThese.setVisibility(View.GONE);
     }
-    protected void showButtons(){
+
+    protected void showButtons() {
         dialog.setVisibility(View.GONE);
         b1.setVisibility(View.VISIBLE);
         b2.setVisibility(View.VISIBLE);
         b3.setVisibility(View.VISIBLE);
+//        b4.setVisibility(View.VISIBLE);
+//        b5.setVisibility(View.VISIBLE);
+//        b6.setVisibility(View.VISIBLE);
         noneOfThese.setVisibility(View.VISIBLE);
-
     }
 
-    // TODO:
+
+    /**
+     * This method contacts Nutrition API and gets response
+     **/
+    public void getNutrition(String queryValue) {
+        Log.i("GetNutritionButton Pressed", "Value:" +queryValue);
+        String REQUEST_TAG = "Nutrition_GET";
+//        queryString = q;
+        completedQueryString = NUTRITION_URL_PREFIX + queryValue + NUTRITION_URL_POSTFIX;
+
+        if (queryValue != null) {
+
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(completedQueryString, null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    Log.i("Nutrition_INFO", response.toString());
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    VolleyLog.d(TAG, "Error: " + error.getMessage());
+                }
+            }) {
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
+                    headers.put("x-app-id", "7b43b860");
+                    return headers;
+                }
+            };
+            NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
+        }
+    }
+
+
     @SuppressLint("StaticFieldLeak")
     private void onImagePicked(@NonNull final byte[] imageBytes) {
 
@@ -143,16 +200,18 @@ public class PhotoDisplayActivity extends AppCompatActivity {
         }.execute();
     }
 
-
-//    private void setBusy(final boolean busy) {
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                switcher.setDisplayedChild(busy ? 1 : 0);
-//                imageView.setVisibility(busy ? GONE : VISIBLE);
-//                fab.setEnabled(!busy);
-//            }
-//        });
-//    }
-
+    @Override
+    public void onClick(View v) {
+        int i = v.getId();
+        if (i == b1.getId()) {
+            //First concept
+            getNutrition(concepts.get(0).name());
+        } else if (i == b2.getId()) {
+            //Second concept
+            getNutrition(concepts.get(1).name());
+        } else if (i == b3.getId()) {
+            //Third concept
+            getNutrition(concepts.get(2).name());
+        }
+    }
 }

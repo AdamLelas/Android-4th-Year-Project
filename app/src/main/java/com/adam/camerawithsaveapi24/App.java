@@ -14,9 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 public class App extends Application {
 
-    // In a real app, rather than attaching singletons (such as the API client instance) to your Application instance,
-    // it's recommended that you use something like Dagger 2, and inject your client instance.
-    // Since that would be a distraction here, we will just use a regular singleton.
     private static App INSTANCE;
 
     @NonNull
