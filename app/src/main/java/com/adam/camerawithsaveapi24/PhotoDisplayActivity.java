@@ -18,19 +18,29 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +56,11 @@ import static android.view.View.*;
 
 public class PhotoDisplayActivity extends AppCompatActivity implements OnClickListener {
 
+    private FirebaseAuth mAuth;
+    private FirebaseDatabase database;
+    private DatabaseReference dbRef;
+    private FirebaseUser user;
+
     private int counter = 0;
     private static final String TAG = "PhotoDisplayActivity";
     private final int ARRAYSIZE = 5;
@@ -54,9 +69,12 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private byte[] imageBytes;
     protected List<Concept> concepts = new ArrayList<>();
     private Button b1, b2, b3;
+    private boolean buttonFirstClick = true;
     private Button noneOfThese;
     private ImageView imageView;
     private ProgressBar dialog;
+
+    private List<FoodItem> foodItemsList = new ArrayList<>();
 
     //LinearLayout - buttons
     private LinearLayout L11, L12, L13, L21, L22, L23, L31, L32, L33;
@@ -73,7 +91,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
     private List<String> searchInstantNamesArray3 = new ArrayList<>();
     private List<String> searchInstantServingUnitArray3 = new ArrayList<>();
-//    private
 
 
     //fake JSONObject for test purposes
@@ -93,11 +110,39 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         return stream.toByteArray();
     }
 
+    public void sendDataToDataBase(int value) {
+        String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+        String hoursNow = new SimpleDateFormat("HH").format(new Date());
+        int hoursNowInt = Integer.parseInt(hoursNow);
+        String[] mealTypeArray = {"Breakfast","Lunch","Dinner", "Snack" };
+        int check;
+
+        System.out.println(hoursNowInt);
+        if(hoursNowInt > 6 && hoursNowInt < 12 ){
+            check = 0;
+        } else if (hoursNowInt < 16){
+            check = 1;
+        }else if (hoursNowInt < 18){
+            check = 2;
+        }else {
+            check = 3;
+        }
+
+        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("1").child("calories").setValue(202);
+        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("carbs").setValue(333);
+        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("protein").setValue(400);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_display);
+
+        mAuth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
+        dbRef = database.getReference();
+        user = mAuth.getCurrentUser();
 
         //Set up views findViewById
         imageView = findViewById(R.id.photoDisplayView);
@@ -226,6 +271,27 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         return obj;
     }
 
+    private JSONObject buildJsonPostNutrientsBody() {
+        JSONObject jsonObject = new JSONObject();
+        String queryBody = "";
+        try {
+            for (int i = 0; i < searchInstantNamesArray1.size(); i++) {
+                queryBody = queryBody + searchInstantNamesArray1.get(i) + " and ";
+            }
+            for (int i = 0; i < searchInstantNamesArray2.size(); i++) {
+                queryBody = queryBody + searchInstantNamesArray2.get(i) + " and ";
+            }
+            for (int i = 0; i < searchInstantNamesArray3.size(); i++) {
+                queryBody = queryBody + searchInstantNamesArray3.get(i) + " and ";
+            }
+            jsonObject.put("query", queryBody);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Log.i("buildJsonPostNutrientsBody", queryBody);
+        return jsonObject;
+    }
+
     /**
      * This method contacts Nutrition API and gets response
      **/
@@ -299,7 +365,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.i("PostNutrients", response.toString());
-//                        response.get(i);
+                        extractPostNutrientsData(response);
                     }
                 }, new Response.ErrorListener() {
 
@@ -320,6 +386,39 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
     }
 
+    public void extractPostNutrientsData(JSONObject objIn) {
+        JSONArray jsonArray = new JSONArray();
+        try {
+            jsonArray = objIn.getJSONArray("foods");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            try {
+                JSONObject tempJSONObject = jsonArray.getJSONObject(i);
+                FoodItem tempFoodItem = new FoodItem(
+                        tempJSONObject.getString("food_name"),
+                        tempJSONObject.getString("serving_weight_grams"),
+                        tempJSONObject.getString("nf_calories"),
+                        tempJSONObject.getString("nf_total_fat"),
+                        tempJSONObject.getString("nf_saturated_fat"),
+                        tempJSONObject.getString("nf_cholesterol"),
+                        tempJSONObject.getString("nf_sodium"),
+                        tempJSONObject.getString("nf_total_carbohydrate"),
+                        tempJSONObject.getString("nf_dietary_fiber"),
+                        tempJSONObject.getString("nf_sugars"),
+                        tempJSONObject.getString("nf_protein"),
+                        tempJSONObject.getString("nf_potassium")
+                );
+                foodItemsList.add(tempFoodItem);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
 
     public void extractInstantData(JSONObject jsonObjectIn, int check) {
         JSONArray jsonArray = new JSONArray();
@@ -332,28 +431,18 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         for (int i = 0; i < 3/*jsonArray.length()*/; i++) {
             try {
                 JSONObject tempJsonObject = jsonArray.getJSONObject(i);
-                if(check == 0) {
+                if (check == 0) {
                     searchInstantNamesArray1.add(tempJsonObject.getString("food_name"));
                     searchInstantServingUnitArray1.add(tempJsonObject.getString("serving_unit"));
-                } else if (check == 1){
+                } else if (check == 1) {
                     searchInstantNamesArray2.add(tempJsonObject.getString("food_name"));
                     searchInstantServingUnitArray2.add(tempJsonObject.getString("serving_unit"));
-                } else if (check == 2){
+                } else if (check == 2) {
                     searchInstantNamesArray3.add(tempJsonObject.getString("food_name"));
                     searchInstantServingUnitArray3.add(tempJsonObject.getString("serving_unit"));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
-            }
-        }
-    }
-
-    private void printArray() {
-        for (int i = 0; i < searchInstantNamesArray1.size(); i++) {
-            try {
-                Log.i("Item " + i + ": ", searchInstantNamesArray1.get(i) + " : " + searchInstantServingUnitArray1.get(i));
-            } catch (ArrayIndexOutOfBoundsException e) {
-                Log.d("ArrayOutOfBounds: ", "Exception Caught in Print Array");
             }
         }
     }
@@ -410,43 +499,20 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             L11.setVisibility(VISIBLE);
             L12.setVisibility(VISIBLE);
             L13.setVisibility(VISIBLE);
-
-//            L11TV1.setVisibility(VISIBLE);
-//            L11TV2.setVisibility(VISIBLE);
-//            L12TV1.setVisibility(VISIBLE);
-//            L12TV2.setVisibility(VISIBLE);
-//            L13TV1.setVisibility(VISIBLE);
-//            L13TV2.setVisibility(VISIBLE);
         } else if (res == 2) {
             hideLLButtons();
             L21.setVisibility(VISIBLE);
             L22.setVisibility(VISIBLE);
             L23.setVisibility(VISIBLE);
-
-//            L21TV1.setVisibility(VISIBLE);
-//            L21TV2.setVisibility(VISIBLE);
-//            L22TV1.setVisibility(VISIBLE);
-//            L22TV2.setVisibility(VISIBLE);
-//            L23TV1.setVisibility(VISIBLE);
-//            L23TV2.setVisibility(VISIBLE);
         } else if (res == 3) {
             hideLLButtons();
             L31.setVisibility(VISIBLE);
             L32.setVisibility(VISIBLE);
             L33.setVisibility(VISIBLE);
-
-//            L31TV1.setVisibility(VISIBLE);
-//            L31TV2.setVisibility(VISIBLE);
-//            L32TV1.setVisibility(VISIBLE);
-//            L32TV2.setVisibility(VISIBLE);
-//            L33TV1.setVisibility(VISIBLE);
-//            L33TV2.setVisibility(VISIBLE);
         }
     }
 
-    //
-//    searchInstantNamesArray1
-//    searchInstantServingUnitArray1
+
     @SuppressLint("SetTextI18n")
     public void setTextResultsButtons(int val) {
         if (val == 0) {
@@ -487,27 +553,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         L31.setVisibility(GONE);
         L32.setVisibility(GONE);
         L33.setVisibility(GONE);
-
-//        L11TV1.setVisibility(GONE);
-//        L11TV2.setVisibility(GONE);
-//        L12TV1.setVisibility(GONE);
-//        L12TV2.setVisibility(GONE);
-//        L13TV1.setVisibility(GONE);
-//        L13TV2.setVisibility(GONE);
-//        L21TV1.setVisibility(GONE);
-//        L21TV2.setVisibility(GONE);
-//        L22TV1.setVisibility(GONE);
-//        L22TV2.setVisibility(GONE);
-//        L23TV1.setVisibility(GONE);
-//        L23TV2.setVisibility(GONE);
-//        L31TV1.setVisibility(GONE);
-//        L31TV2.setVisibility(GONE);
-//        L32TV1.setVisibility(GONE);
-//        L32TV2.setVisibility(GONE);
-//        L33TV1.setVisibility(GONE);
-//        L33TV2.setVisibility(GONE);
-
-
     }
 
     @Override
@@ -515,28 +560,54 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         int i = v.getId();
         if (i == b1.getId()) {
             //First concept
-//            getNutritionInstantSearch(concepts.get(0).name());
-
+            if (buttonFirstClick) {
+                postNutritionNutrients(buildJsonPostNutrientsBody());
+                sendDataToDataBase(1);
+                buttonFirstClick = false;
+            }
             displayResultsButtons(1);
-            printArray();
+
         } else if (i == b2.getId()) {
             //Second concept
-//            getNutritionInstantSearch(concepts.get(1).name());
-
+            if (buttonFirstClick) {
+                postNutritionNutrients(buildJsonPostNutrientsBody());
+                buttonFirstClick = false;
+            }
             displayResultsButtons(2);
-            printArray();
+
 
         } else if (i == b3.getId()) {
             //Third concept
-//            getNutritionInstantSearch(concepts.get(0).name());
-//            getNutritionInstantSearch(concepts.get(1).name());
-//            getNutritionInstantSearch(concepts.get(2).name());
+            if (buttonFirstClick) {
+                postNutritionNutrients(buildJsonPostNutrientsBody());
+                buttonFirstClick = false;
+            }
             displayResultsButtons(3);
-            printArray();
 
         } else if (i == noneOfThese.getId()) {
-            postNutritionNutrients(fakeJson);
+            //TODO: go to enter text mode4
+        } else if (i == L11.getId()) {
+            System.out.println(foodItemsList.get(0));
+        } else if (i == L12.getId()) {
+            System.out.println(foodItemsList.get(1));
+
+        } else if (i == L13.getId()) {
+            System.out.println(foodItemsList.get(3));
+
+        } else if (i == L21.getId()) {
+
+        } else if (i == L22.getId()) {
+
+        } else if (i == L23.getId()) {
+
+        } else if (i == L31.getId()) {
+
+        } else if (i == L32.getId()) {
+
+        } else if (i == L33.getId()) {
 
         }
+
+
     }
 }
