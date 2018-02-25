@@ -1,5 +1,6 @@
 package com.adam.camerawithsaveapi24;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 
@@ -12,6 +13,7 @@ import com.android.volley.toolbox.Volley;
 /**
  * Created by Adam on 16/02/2018.
  */
+
 
 public class NutritionSingleton extends Application {
 
@@ -65,7 +67,7 @@ public class NutritionSingleton extends Application {
 /**
  * This method contacts Nutrition API and returns
  **/
-//    public void getNutrition(String q) {
+//    public void getNutritionInstantSearch(String q) {
 //        String REQUEST_TAG = "Nutrition_GET";
 //
 //        queryString = q;

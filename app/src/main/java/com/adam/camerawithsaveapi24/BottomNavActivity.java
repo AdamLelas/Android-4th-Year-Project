@@ -190,7 +190,7 @@ public class BottomNavActivity extends AppCompatActivity {
 
                 ex.printStackTrace();
             }
-            // Continue only if the File was successfully created
+            // Continues only if the File was successfully created
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
                         "com.adam.camerawithsaveapi24.fileprovider",

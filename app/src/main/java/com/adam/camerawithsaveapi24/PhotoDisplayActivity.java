@@ -14,14 +14,19 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -37,10 +42,14 @@ import clarifai2.dto.model.ConceptModel;
 import clarifai2.dto.model.output.ClarifaiOutput;
 import clarifai2.dto.prediction.Concept;
 
-public class PhotoDisplayActivity extends AppCompatActivity implements View.OnClickListener {
+import static android.view.View.*;
 
+public class PhotoDisplayActivity extends AppCompatActivity implements OnClickListener {
 
+    private int counter = 0;
     private static final String TAG = "PhotoDisplayActivity";
+    private final int ARRAYSIZE = 5;
+
     private String fpath;
     private byte[] imageBytes;
     protected List<Concept> concepts = new ArrayList<>();
@@ -49,10 +58,33 @@ public class PhotoDisplayActivity extends AppCompatActivity implements View.OnCl
     private ImageView imageView;
     private ProgressBar dialog;
 
+    //LinearLayout - buttons
+    private LinearLayout L11, L12, L13, L21, L22, L23, L31, L32, L33;
+    private TextView L11TV1, L11TV2, L12TV1, L12TV2, L13TV1, L13TV2,
+            L21TV1, L21TV2, L22TV1, L22TV2, L23TV1, L23TV2,
+            L31TV1, L31TV2, L32TV1, L32TV2, L33TV1, L33TV2;
+
+    //Nutritionix Search Instant Storage
+    private List<String> searchInstantNamesArray1 = new ArrayList<>();
+    private List<String> searchInstantServingUnitArray1 = new ArrayList<>();
+
+    private List<String> searchInstantNamesArray2 = new ArrayList<>();
+    private List<String> searchInstantServingUnitArray2 = new ArrayList<>();
+
+    private List<String> searchInstantNamesArray3 = new ArrayList<>();
+    private List<String> searchInstantServingUnitArray3 = new ArrayList<>();
+//    private
+
+
+    //fake JSONObject for test purposes
+    private JSONObject fakeJson;
+
     //    private String queryString = null;
-    private final String NUTRITION_URL_PREFIX = "https://trackapi.nutritionix.com/v2/search/instant?query=";
-    private final String NUTRITION_URL_POSTFIX = "&branded=false";
-    private String completedQueryString;
+    private final String NUTRITION_INSTANT_URL_PREFIX = "https://trackapi.nutritionix.com/v2/search/instant?query=";
+    private final String NUTRITION_INSTANT_URL_POSTFIX = "&branded=false";
+
+    private final String NUTRITION_NUTRIENTS_URL_PREFIX = "https://trackapi.nutritionix.com/v2/natural/nutrients";
+    private final String NUTRITION_NUTRIENTS_URL_POSTFIX = "";
 
 
     protected byte[] getBytesFromFile(Bitmap bitmap) {
@@ -77,6 +109,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements View.OnCl
         b3.setOnClickListener(this);
 
         noneOfThese = findViewById(R.id.food_select_button_none);
+        noneOfThese.setOnClickListener(this);
+
+
         dialog = findViewById(R.id.photo_display_progress_bar);
 
         Intent intent = getIntent();
@@ -84,6 +119,62 @@ public class PhotoDisplayActivity extends AppCompatActivity implements View.OnCl
         Bitmap bm = BitmapFactory.decodeFile(fpath);
         imageBytes = getBytesFromFile(bm);
         imageView.setImageBitmap(bm);
+
+        fakeJson = createFakeJson();
+
+//        LinearLayouts - buttons
+        L11 = findViewById(R.id.c1_linearLayout1);
+        L11.setOnClickListener(this);
+
+        L12 = findViewById(R.id.c1_linearLayout2);
+        L12.setOnClickListener(this);
+
+        L13 = findViewById(R.id.c1_linearLayout3);
+        L13.setOnClickListener(this);
+
+        L21 = findViewById(R.id.c2_linearLayout1);
+        L21.setOnClickListener(this);
+
+        L22 = findViewById(R.id.c2_linearLayout2);
+        L22.setOnClickListener(this);
+
+        L23 = findViewById(R.id.c2_linearLayout3);
+        L23.setOnClickListener(this);
+
+        L31 = findViewById(R.id.c3_linearLayout1);
+        L31.setOnClickListener(this);
+
+        L32 = findViewById(R.id.c3_linearLayout2);
+        L32.setOnClickListener(this);
+
+        L33 = findViewById(R.id.c3_linearLayout3);
+        L33.setOnClickListener(this);
+
+
+        //LinearLayouts - textviews
+//        child one
+        L11TV1 = findViewById(R.id.c1_1_tv_1);
+        L11TV2 = findViewById(R.id.c1_1_tv_2);
+        L12TV1 = findViewById(R.id.c1_2_tv_1);
+        L12TV2 = findViewById(R.id.c1_2_tv_2);
+        L13TV1 = findViewById(R.id.c1_3_tv_1);
+        L13TV2 = findViewById(R.id.c1_3_tv_2);
+//        child two
+        L21TV1 = findViewById(R.id.c2_1_tv_1);
+        L21TV2 = findViewById(R.id.c2_1_tv_2);
+        L22TV1 = findViewById(R.id.c2_2_tv_1);
+        L22TV2 = findViewById(R.id.c2_2_tv_2);
+        L23TV1 = findViewById(R.id.c2_3_tv_1);
+        L23TV2 = findViewById(R.id.c2_3_tv_2);
+//        child three
+        L31TV1 = findViewById(R.id.c3_1_tv_1);
+        L31TV2 = findViewById(R.id.c3_1_tv_2);
+        L32TV1 = findViewById(R.id.c3_2_tv_1);
+        L32TV2 = findViewById(R.id.c3_2_tv_2);
+        L33TV1 = findViewById(R.id.c3_3_tv_1);
+        L33TV2 = findViewById(R.id.c3_3_tv_2);
+
+
     }
 
     @Override
@@ -104,41 +195,54 @@ public class PhotoDisplayActivity extends AppCompatActivity implements View.OnCl
     }
 
     protected void hideButtons() {
-        b1.setVisibility(View.GONE);
-        b2.setVisibility(View.GONE);
-        b3.setVisibility(View.GONE);
+        b1.setVisibility(GONE);
+        b2.setVisibility(GONE);
+        b3.setVisibility(GONE);
 //        b4.setVisibility(View.GONE);
 //        b5.setVisibility(View.GONE);
 //        b6.setVisibility(View.GONE);
-        noneOfThese.setVisibility(View.GONE);
+        noneOfThese.setVisibility(GONE);
     }
 
     protected void showButtons() {
-        dialog.setVisibility(View.GONE);
-        b1.setVisibility(View.VISIBLE);
-        b2.setVisibility(View.VISIBLE);
-        b3.setVisibility(View.VISIBLE);
+        dialog.setVisibility(GONE);
+        b1.setVisibility(VISIBLE);
+        b2.setVisibility(VISIBLE);
+        b3.setVisibility(VISIBLE);
 //        b4.setVisibility(View.VISIBLE);
 //        b5.setVisibility(View.VISIBLE);
 //        b6.setVisibility(View.VISIBLE);
-        noneOfThese.setVisibility(View.VISIBLE);
+        noneOfThese.setVisibility(VISIBLE);
     }
 
+
+    public JSONObject createFakeJson() {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("query", "apple and banana");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return obj;
+    }
 
     /**
      * This method contacts Nutrition API and gets response
      **/
-    public void getNutrition(String queryValue) {
-        Log.i("GetNutritionButton Pressed", "Value:" +queryValue);
+    public void getNutritionInstantSearch(String queryValue, final int flag) {
+        Log.i("GetNutritionButton_Pressed", "Value:" + queryValue);
         String REQUEST_TAG = "Nutrition_GET";
 //        queryString = q;
-        completedQueryString = NUTRITION_URL_PREFIX + queryValue + NUTRITION_URL_POSTFIX;
+        String completedGetString = NUTRITION_INSTANT_URL_PREFIX + queryValue + NUTRITION_INSTANT_URL_POSTFIX;
 
         if (queryValue != null) {
 
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(completedQueryString, null, new Response.Listener<JSONObject>() {
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(completedGetString, null, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
+                    extractInstantData(response, flag);
+                    setTextResultsButtons(flag);
+                    counter++;
                     Log.i("Nutrition_INFO", response.toString());
                 }
             }, new Response.ErrorListener() {
@@ -158,6 +262,101 @@ public class PhotoDisplayActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
+//    public void postNutritionNutrients(String queryValue) {
+//        Log.i("POST_nutrients", "Value: " + queryValue);
+//        String REQUEST_TAG = "Nutrition_Nutrients_POST";
+//        String completedPostString = NUTRITION_NUTRIENTS_URL_PREFIX;
+//
+//        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, completedPostString,
+//                new Response.Listener<JSONObject>() {
+//                    @Override
+//                    public void onResponse(JSONObject response) {
+//                        Log.i("Nutrition_INFO", response.toString());
+//                    }
+//                }, new Response.ErrorListener() {
+//            @Override
+//            public void onErrorResponse(VolleyError error) {
+//                VolleyLog.d(TAG, "Error: " + error.getMessage());
+//            }
+//        }) {
+//            public Map<String, String> getHeaders() throws AuthFailureError {
+//                Map<String, String> headers = new HashMap<>();
+//                headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
+//                headers.put("x-app-id", "7b43b860");
+//                return headers;
+//            }
+//        };
+//        NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
+//    }
+
+
+    public void postNutritionNutrients(JSONObject jsonObject) {
+        String url = NUTRITION_NUTRIENTS_URL_PREFIX;
+        String REQUEST_TAG = "Nutrients_POST";
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.POST, url, jsonObject,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.i("PostNutrients", response.toString());
+//                        response.get(i);
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.d(TAG, "Error: " + error.getMessage());
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<>();
+                headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
+                headers.put("x-app-id", "7b43b860");
+//                headers.put("x-remote-user-id", "0");
+                return headers;
+            }
+        };
+        NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
+    }
+
+
+    public void extractInstantData(JSONObject jsonObjectIn, int check) {
+        JSONArray jsonArray = new JSONArray();
+        try {
+            jsonArray = jsonObjectIn.getJSONArray("common");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < 3/*jsonArray.length()*/; i++) {
+            try {
+                JSONObject tempJsonObject = jsonArray.getJSONObject(i);
+                if(check == 0) {
+                    searchInstantNamesArray1.add(tempJsonObject.getString("food_name"));
+                    searchInstantServingUnitArray1.add(tempJsonObject.getString("serving_unit"));
+                } else if (check == 1){
+                    searchInstantNamesArray2.add(tempJsonObject.getString("food_name"));
+                    searchInstantServingUnitArray2.add(tempJsonObject.getString("serving_unit"));
+                } else if (check == 2){
+                    searchInstantNamesArray3.add(tempJsonObject.getString("food_name"));
+                    searchInstantServingUnitArray3.add(tempJsonObject.getString("serving_unit"));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void printArray() {
+        for (int i = 0; i < searchInstantNamesArray1.size(); i++) {
+            try {
+                Log.i("Item " + i + ": ", searchInstantNamesArray1.get(i) + " : " + searchInstantServingUnitArray1.get(i));
+            } catch (ArrayIndexOutOfBoundsException e) {
+                Log.d("ArrayOutOfBounds: ", "Exception Caught in Print Array");
+            }
+        }
+    }
 
     @SuppressLint("StaticFieldLeak")
     private void onImagePicked(@NonNull final byte[] imageBytes) {
@@ -188,6 +387,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements View.OnCl
                 }
                 concepts = predictions.get(0).data();
                 changeButtonText();
+                getNutritionInstantSearch(concepts.get(0).name(), 0);
+                getNutritionInstantSearch(concepts.get(1).name(), 1);
+                getNutritionInstantSearch(concepts.get(2).name(), 2);
+//                setTextResultsButtons();
             }
 
             private void showErrorSnackbar(@StringRes int errorString) {
@@ -200,18 +403,140 @@ public class PhotoDisplayActivity extends AppCompatActivity implements View.OnCl
         }.execute();
     }
 
+    //    TODO: Add code to change buttons
+    public void displayResultsButtons(int res) {
+        if (res == 1) {
+            hideLLButtons();
+            L11.setVisibility(VISIBLE);
+            L12.setVisibility(VISIBLE);
+            L13.setVisibility(VISIBLE);
+
+//            L11TV1.setVisibility(VISIBLE);
+//            L11TV2.setVisibility(VISIBLE);
+//            L12TV1.setVisibility(VISIBLE);
+//            L12TV2.setVisibility(VISIBLE);
+//            L13TV1.setVisibility(VISIBLE);
+//            L13TV2.setVisibility(VISIBLE);
+        } else if (res == 2) {
+            hideLLButtons();
+            L21.setVisibility(VISIBLE);
+            L22.setVisibility(VISIBLE);
+            L23.setVisibility(VISIBLE);
+
+//            L21TV1.setVisibility(VISIBLE);
+//            L21TV2.setVisibility(VISIBLE);
+//            L22TV1.setVisibility(VISIBLE);
+//            L22TV2.setVisibility(VISIBLE);
+//            L23TV1.setVisibility(VISIBLE);
+//            L23TV2.setVisibility(VISIBLE);
+        } else if (res == 3) {
+            hideLLButtons();
+            L31.setVisibility(VISIBLE);
+            L32.setVisibility(VISIBLE);
+            L33.setVisibility(VISIBLE);
+
+//            L31TV1.setVisibility(VISIBLE);
+//            L31TV2.setVisibility(VISIBLE);
+//            L32TV1.setVisibility(VISIBLE);
+//            L32TV2.setVisibility(VISIBLE);
+//            L33TV1.setVisibility(VISIBLE);
+//            L33TV2.setVisibility(VISIBLE);
+        }
+    }
+
+    //
+//    searchInstantNamesArray1
+//    searchInstantServingUnitArray1
+    @SuppressLint("SetTextI18n")
+    public void setTextResultsButtons(int val) {
+        if (val == 0) {
+            L11TV1.setText(searchInstantNamesArray1.get(0));
+            L12TV1.setText(searchInstantNamesArray1.get(1));
+            L13TV1.setText(searchInstantNamesArray1.get(2));
+
+            L11TV2.setText("Serving Size:" + searchInstantServingUnitArray1.get(0));
+            L12TV2.setText("Serving Size:" + searchInstantServingUnitArray1.get(1));
+            L13TV2.setText("Serving Size:" + searchInstantServingUnitArray1.get(2));
+        } else if (val == 1) {
+            L21TV1.setText(searchInstantNamesArray2.get(0));
+            L22TV1.setText(searchInstantNamesArray2.get(1));
+            L23TV1.setText(searchInstantNamesArray2.get(2));
+
+            L21TV2.setText("Serving Size:" + searchInstantServingUnitArray2.get(0));
+            L22TV2.setText("Serving Size:" + searchInstantServingUnitArray2.get(1));
+            L23TV2.setText("Serving Size:" + searchInstantServingUnitArray2.get(2));
+        } else if (val == 2) {
+            L31TV1.setText(searchInstantNamesArray3.get(0));
+            L32TV1.setText(searchInstantNamesArray3.get(1));
+            L33TV1.setText(searchInstantNamesArray3.get(2));
+
+            L31TV2.setText("Serving Size:" + searchInstantServingUnitArray3.get(0));
+            L32TV2.setText("Serving Size:" + searchInstantServingUnitArray3.get(1));
+            L33TV2.setText("Serving Size:" + searchInstantServingUnitArray3.get(2));
+        }
+    }
+
+
+    public void hideLLButtons() {
+        L11.setVisibility(GONE);
+        L12.setVisibility(GONE);
+        L13.setVisibility(GONE);
+        L21.setVisibility(GONE);
+        L22.setVisibility(GONE);
+        L23.setVisibility(GONE);
+        L31.setVisibility(GONE);
+        L32.setVisibility(GONE);
+        L33.setVisibility(GONE);
+
+//        L11TV1.setVisibility(GONE);
+//        L11TV2.setVisibility(GONE);
+//        L12TV1.setVisibility(GONE);
+//        L12TV2.setVisibility(GONE);
+//        L13TV1.setVisibility(GONE);
+//        L13TV2.setVisibility(GONE);
+//        L21TV1.setVisibility(GONE);
+//        L21TV2.setVisibility(GONE);
+//        L22TV1.setVisibility(GONE);
+//        L22TV2.setVisibility(GONE);
+//        L23TV1.setVisibility(GONE);
+//        L23TV2.setVisibility(GONE);
+//        L31TV1.setVisibility(GONE);
+//        L31TV2.setVisibility(GONE);
+//        L32TV1.setVisibility(GONE);
+//        L32TV2.setVisibility(GONE);
+//        L33TV1.setVisibility(GONE);
+//        L33TV2.setVisibility(GONE);
+
+
+    }
+
     @Override
     public void onClick(View v) {
         int i = v.getId();
         if (i == b1.getId()) {
             //First concept
-            getNutrition(concepts.get(0).name());
+//            getNutritionInstantSearch(concepts.get(0).name());
+
+            displayResultsButtons(1);
+            printArray();
         } else if (i == b2.getId()) {
             //Second concept
-            getNutrition(concepts.get(1).name());
+//            getNutritionInstantSearch(concepts.get(1).name());
+
+            displayResultsButtons(2);
+            printArray();
+
         } else if (i == b3.getId()) {
             //Third concept
-            getNutrition(concepts.get(2).name());
+//            getNutritionInstantSearch(concepts.get(0).name());
+//            getNutritionInstantSearch(concepts.get(1).name());
+//            getNutritionInstantSearch(concepts.get(2).name());
+            displayResultsButtons(3);
+            printArray();
+
+        } else if (i == noneOfThese.getId()) {
+            postNutritionNutrients(fakeJson);
+
         }
     }
 }

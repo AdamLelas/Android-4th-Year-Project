@@ -38,7 +38,9 @@
         <activity android:name=".PhotoDisplayActivity" />
         <activity android:name=".SignUpActivity" />
         <activity android:name=".SignInActivity" />
-        <activity android:name=".AccountManagementActivity"></activity>
+        <activity android:name=".AccountManagementActivity"/>
+
+
     </application>
 
 </manifest>
