@@ -8,19 +8,22 @@ import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
+
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -61,7 +64,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private DatabaseReference dbRef;
     private FirebaseUser user;
 
-    private int counter = 0;
     private static final String TAG = "PhotoDisplayActivity";
     private final int ARRAYSIZE = 5;
 
@@ -74,7 +76,37 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private ImageView imageView;
     private ProgressBar dialog;
 
+//    Confirmation Screen Views [START]
+
+    private LinearLayout confTopBar;
+    private LinearLayout confBottomBar;
+    private ScrollView confItemScrollViewParent;
+    private View includedConfLayout;
+    private ImageButton backArrow;
+    private ImageButton confConfirmSelection;
+    private EditText servingAmount;
+    private int servingAmountValue;
+
+    //    Confirmation Screen TextViews
+    private TextView botCal, botCarb, botFat, botProtein, calVal, totFatVal, satFatVal, cholVal, carbVal, fibVal, sugVal, protVal, potasVal;
+
+
+//    Confirmation Screen Views [END]
+
+
     private List<FoodItem> foodItemsList = new ArrayList<>();
+
+    //    maybe make an array instead
+    private double calValLocal;
+    private double totFatValLocal;
+    private double satFatValLocal;
+    private double cholValLocal;
+    private double carbValLocal;
+    private double fibValLocal;
+    private double sugValLocal;
+    private double protValLocal;
+    private double potasValLocal;
+
 
     //LinearLayout - buttons
     private LinearLayout L11, L12, L13, L21, L22, L23, L31, L32, L33;
@@ -93,45 +125,11 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private List<String> searchInstantServingUnitArray3 = new ArrayList<>();
 
 
-    //fake JSONObject for test purposes
-    private JSONObject fakeJson;
-
     //    private String queryString = null;
     private final String NUTRITION_INSTANT_URL_PREFIX = "https://trackapi.nutritionix.com/v2/search/instant?query=";
     private final String NUTRITION_INSTANT_URL_POSTFIX = "&branded=false";
 
-    private final String NUTRITION_NUTRIENTS_URL_PREFIX = "https://trackapi.nutritionix.com/v2/natural/nutrients";
-    private final String NUTRITION_NUTRIENTS_URL_POSTFIX = "";
-
-
-    protected byte[] getBytesFromFile(Bitmap bitmap) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-        return stream.toByteArray();
-    }
-
-    public void sendDataToDataBase(int value) {
-        String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
-        String hoursNow = new SimpleDateFormat("HH").format(new Date());
-        int hoursNowInt = Integer.parseInt(hoursNow);
-        String[] mealTypeArray = {"Breakfast","Lunch","Dinner", "Snack" };
-        int check;
-
-        System.out.println(hoursNowInt);
-        if(hoursNowInt > 6 && hoursNowInt < 12 ){
-            check = 0;
-        } else if (hoursNowInt < 16){
-            check = 1;
-        }else if (hoursNowInt < 18){
-            check = 2;
-        }else {
-            check = 3;
-        }
-
-        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("1").child("calories").setValue(202);
-        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("carbs").setValue(333);
-        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("protein").setValue(400);
-    }
+    private final String NUTRITION_NUTRIENTS_URL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
 
     @Override
@@ -139,6 +137,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_display);
 
+
+        //Firebase
         mAuth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         dbRef = database.getReference();
@@ -164,8 +164,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         Bitmap bm = BitmapFactory.decodeFile(fpath);
         imageBytes = getBytesFromFile(bm);
         imageView.setImageBitmap(bm);
-
-        fakeJson = createFakeJson();
 
 //        LinearLayouts - buttons
         L11 = findViewById(R.id.c1_linearLayout1);
@@ -219,58 +217,133 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         L33TV1 = findViewById(R.id.c3_3_tv_1);
         L33TV2 = findViewById(R.id.c3_3_tv_2);
 
+//        Confirmation Screen Views
+        includedConfLayout = findViewById(R.id.include_conf_items);
+        confBottomBar = includedConfLayout.findViewById(R.id.conf_bottom_bar_linear);
+        confItemScrollViewParent = includedConfLayout.findViewById(R.id.conf_item_vert_scroll_view);
+        confTopBar = includedConfLayout.findViewById(R.id.conf_topbar);
 
+        confConfirmSelection = includedConfLayout.findViewById(R.id.conf_tick);
+        confConfirmSelection.setOnClickListener(this);
+
+        backArrow = includedConfLayout.findViewById(R.id.conf_back_arrow);
+        backArrow.setOnClickListener(this);
+
+        servingAmount = includedConfLayout.findViewById(R.id.conf_serving_amt_et);
+        servingAmount.setText("1");
+        servingAmountValue = parseServingAmount();
+
+        servingAmount.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                setServingAmountValue();
+//                modifyLocalValues();
+                setConfScreenTextViews();
+            }
+        });
+
+
+//        Confirmation Screen Vals
+        botCal = includedConfLayout.findViewById(R.id.bot_tv_cals_val);
+        botCarb = includedConfLayout.findViewById(R.id.bot_tv_carbs_val);
+        botFat = includedConfLayout.findViewById(R.id.bot_tv_fat_val);
+        botProtein = includedConfLayout.findViewById(R.id.bot_tv_protein_val);
+        calVal = includedConfLayout.findViewById(R.id.conf_calories_disp_value);
+        totFatVal = includedConfLayout.findViewById(R.id.conf_totalfat_disp_value);
+        satFatVal = includedConfLayout.findViewById(R.id.conf_satfat_disp_value);
+        cholVal = includedConfLayout.findViewById(R.id.conf_chol_disp_value);
+        carbVal = includedConfLayout.findViewById(R.id.conf_carbs_disp_value);
+        fibVal = includedConfLayout.findViewById(R.id.conf_fiber_disp_value);
+        sugVal = includedConfLayout.findViewById(R.id.conf_sugar_disp_value);
+        protVal = includedConfLayout.findViewById(R.id.conf_protein_disp_value);
+        potasVal = includedConfLayout.findViewById(R.id.conf_potassium_disp_value);
     }
+
 
     @Override
     protected void onStart() {
         super.onStart();
+        hideConf();
         hideButtons();
         onImagePicked(imageBytes);
     }
 
-    public void changeButtonText() {
-        showButtons();
-        b1.setText(concepts.get(0).name());
-        b2.setText(concepts.get(1).name());
-        b3.setText(concepts.get(2).name());
-//        b4.setText(concepts.get(3).name());
-//        b5.setText(concepts.get(4).name());
-//        b6.setText(concepts.get(5).name());
-    }
-
-    protected void hideButtons() {
-        b1.setVisibility(GONE);
-        b2.setVisibility(GONE);
-        b3.setVisibility(GONE);
-//        b4.setVisibility(View.GONE);
-//        b5.setVisibility(View.GONE);
-//        b6.setVisibility(View.GONE);
-        noneOfThese.setVisibility(GONE);
-    }
-
-    protected void showButtons() {
-        dialog.setVisibility(GONE);
-        b1.setVisibility(VISIBLE);
-        b2.setVisibility(VISIBLE);
-        b3.setVisibility(VISIBLE);
-//        b4.setVisibility(View.VISIBLE);
-//        b5.setVisibility(View.VISIBLE);
-//        b6.setVisibility(View.VISIBLE);
-        noneOfThese.setVisibility(VISIBLE);
-    }
-
-
-    public JSONObject createFakeJson() {
-        JSONObject obj = new JSONObject();
+    /*
+    * MISCELLANEOUS [START]
+    */
+    private static int parseIntSafely(String str) {
+        int result = 0;
         try {
-            obj.put("query", "apple and banana");
-        } catch (JSONException e) {
-            e.printStackTrace();
+            result = Integer.parseInt(str);
+        } catch (NullPointerException npe) {
+        } catch (NumberFormatException nfe) {
         }
-        return obj;
+        return result;
     }
 
+
+    protected byte[] getBytesFromFile(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        return stream.toByteArray();
+    }
+
+    private int parseServingAmount() {
+        return parseIntSafely(servingAmount.getText().toString());
+    }
+
+    private void setServingAmountValue() {
+        servingAmountValue = parseServingAmount();
+    }
+
+
+
+    /*
+    * MISCELLANEOUS [END]
+    */
+
+    /*
+    * FIREBASE [START]
+    */
+    public void sendDataToDataBase(int value) {
+        String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+        String hoursNow = new SimpleDateFormat("HH").format(new Date());
+        int hoursNowInt = Integer.parseInt(hoursNow);
+        String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
+        int check;
+
+        System.out.println(hoursNowInt);
+        if (hoursNowInt > 6 && hoursNowInt < 12) {
+            check = 0;
+        } else if (hoursNowInt < 16) {
+            check = 1;
+        } else if (hoursNowInt < 18) {
+            check = 2;
+        } else {
+            check = 3;
+        }
+
+        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("1").child("calories").setValue(202);
+        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("carbs").setValue(333);
+        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("protein").setValue(400);
+    }
+
+    /*
+    * FIREBASE [END]
+    */
+
+
+    /*
+     * JSON RELATED FUNCTIONALITY [START]
+     */
     private JSONObject buildJsonPostNutrientsBody() {
         JSONObject jsonObject = new JSONObject();
         String queryBody = "";
@@ -290,100 +363,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         }
         Log.i("buildJsonPostNutrientsBody", queryBody);
         return jsonObject;
-    }
-
-    /**
-     * This method contacts Nutrition API and gets response
-     **/
-    public void getNutritionInstantSearch(String queryValue, final int flag) {
-        Log.i("GetNutritionButton_Pressed", "Value:" + queryValue);
-        String REQUEST_TAG = "Nutrition_GET";
-//        queryString = q;
-        String completedGetString = NUTRITION_INSTANT_URL_PREFIX + queryValue + NUTRITION_INSTANT_URL_POSTFIX;
-
-        if (queryValue != null) {
-
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(completedGetString, null, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    extractInstantData(response, flag);
-                    setTextResultsButtons(flag);
-                    counter++;
-                    Log.i("Nutrition_INFO", response.toString());
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    VolleyLog.d(TAG, "Error: " + error.getMessage());
-                }
-            }) {
-                public Map<String, String> getHeaders() throws AuthFailureError {
-                    Map<String, String> headers = new HashMap<>();
-                    headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
-                    headers.put("x-app-id", "7b43b860");
-                    return headers;
-                }
-            };
-            NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
-        }
-    }
-
-//    public void postNutritionNutrients(String queryValue) {
-//        Log.i("POST_nutrients", "Value: " + queryValue);
-//        String REQUEST_TAG = "Nutrition_Nutrients_POST";
-//        String completedPostString = NUTRITION_NUTRIENTS_URL_PREFIX;
-//
-//        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, completedPostString,
-//                new Response.Listener<JSONObject>() {
-//                    @Override
-//                    public void onResponse(JSONObject response) {
-//                        Log.i("Nutrition_INFO", response.toString());
-//                    }
-//                }, new Response.ErrorListener() {
-//            @Override
-//            public void onErrorResponse(VolleyError error) {
-//                VolleyLog.d(TAG, "Error: " + error.getMessage());
-//            }
-//        }) {
-//            public Map<String, String> getHeaders() throws AuthFailureError {
-//                Map<String, String> headers = new HashMap<>();
-//                headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
-//                headers.put("x-app-id", "7b43b860");
-//                return headers;
-//            }
-//        };
-//        NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
-//    }
-
-
-    public void postNutritionNutrients(JSONObject jsonObject) {
-        String url = NUTRITION_NUTRIENTS_URL_PREFIX;
-        String REQUEST_TAG = "Nutrients_POST";
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-                Request.Method.POST, url, jsonObject,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.i("PostNutrients", response.toString());
-                        extractPostNutrientsData(response);
-                    }
-                }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
-            }
-        }) {
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<>();
-                headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
-                headers.put("x-app-id", "7b43b860");
-//                headers.put("x-remote-user-id", "0");
-                return headers;
-            }
-        };
-        NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
     }
 
     public void extractPostNutrientsData(JSONObject objIn) {
@@ -446,7 +425,14 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             }
         }
     }
+    /*
+     * JSON RELATED FUNCTIONALITY [END]
+     */
 
+
+    /*
+     * NETWORK STUFF [START]
+     */
     @SuppressLint("StaticFieldLeak")
     private void onImagePicked(@NonNull final byte[] imageBytes) {
 
@@ -492,7 +478,137 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         }.execute();
     }
 
-    //    TODO: Add code to change buttons
+
+    public void getNutritionInstantSearch(String queryValue, final int flag) {
+        Log.i("GetNutritionButton_Pressed", "Value:" + queryValue);
+        String REQUEST_TAG = "Nutrition_GET";
+        String completedGetString = NUTRITION_INSTANT_URL_PREFIX + queryValue + NUTRITION_INSTANT_URL_POSTFIX;
+
+        if (queryValue != null) {
+
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(completedGetString, null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    extractInstantData(response, flag);
+                    setTextResultsButtons(flag);
+
+                    Log.i("Nutrition_INFO", response.toString());
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    VolleyLog.d(TAG, "Error: " + error.getMessage());
+                }
+            }) {
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
+                    headers.put("x-app-id", "7b43b860");
+                    return headers;
+                }
+            };
+            NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
+        }
+    }
+
+
+    public void postNutritionNutrients(JSONObject jsonObject) {
+        String url = NUTRITION_NUTRIENTS_URL;
+        String REQUEST_TAG = "Nutrients_POST";
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.POST, url, jsonObject,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.i("PostNutrients", response.toString());
+                        extractPostNutrientsData(response);
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.d(TAG, "Error: " + error.getMessage());
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<>();
+                headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
+                headers.put("x-app-id", "7b43b860");
+//                headers.put("x-remote-user-id", "0");
+                return headers;
+            }
+        };
+        NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
+    }
+
+    /*
+     * NETWORK STUFF [END]
+     */
+
+
+    /*
+    *[START] Layout Modifiers - Show/Hide elements [START]
+    */
+
+    protected void hideButtons() {
+        b1.setVisibility(GONE);
+        b2.setVisibility(GONE);
+        b3.setVisibility(GONE);
+        noneOfThese.setVisibility(GONE);
+    }
+
+    protected void showButtons() {
+        dialog.setVisibility(GONE);
+        b1.setVisibility(VISIBLE);
+        b2.setVisibility(VISIBLE);
+        b3.setVisibility(VISIBLE);
+        noneOfThese.setVisibility(VISIBLE);
+    }
+
+    public void changeButtonText() {
+        showButtons();
+        b1.setText(concepts.get(0).name());
+        b2.setText(concepts.get(1).name());
+        b3.setText(concepts.get(2).name());
+    }
+
+    public void showConf() {
+        confBottomBar.setVisibility(VISIBLE);
+        confItemScrollViewParent.setVisibility(VISIBLE);
+        confTopBar.setVisibility(VISIBLE);
+    }
+
+    public void hideConf() {
+        confBottomBar.setVisibility(GONE);
+        confItemScrollViewParent.setVisibility(GONE);
+        confTopBar.setVisibility(GONE);
+    }
+
+    private void hideAllForConf() {
+        hideLLButtons();
+        hideButtons();
+        imageView.setVisibility(GONE);
+    }
+
+    private void showAllAfterConf() {
+        hideConf();
+        showButtons();
+        imageView.setVisibility(VISIBLE);
+    }
+
+    public void hideLLButtons() {
+        L11.setVisibility(GONE);
+        L12.setVisibility(GONE);
+        L13.setVisibility(GONE);
+        L21.setVisibility(GONE);
+        L22.setVisibility(GONE);
+        L23.setVisibility(GONE);
+        L31.setVisibility(GONE);
+        L32.setVisibility(GONE);
+        L33.setVisibility(GONE);
+    }
+
     public void displayResultsButtons(int res) {
         if (res == 1) {
             hideLLButtons();
@@ -510,6 +626,52 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             L32.setVisibility(VISIBLE);
             L33.setVisibility(VISIBLE);
         }
+    }
+
+    public void goToConfirmationScreen(int val) {
+        hideAllForConf();
+        showConf();
+        setConfScreenLocalValues(val);
+//        TODO: Set all the values in here
+    }
+
+    /*
+    * [END] Layout Modifiers - Show/Hide elements [END]
+    */
+
+    //    [START] Layout Modifiers - Edit Text / Images [START]
+
+    public void setConfScreenLocalValues(int val) {
+        calValLocal = (foodItemsList.get(val).getCalories());
+        totFatValLocal = (foodItemsList.get(val).getTotal_fat());
+        satFatValLocal = (foodItemsList.get(val).getSaturated_fat());
+        cholValLocal = (foodItemsList.get(val).getCholesterol());
+        carbValLocal = (foodItemsList.get(val).getCarbs());
+        fibValLocal = (foodItemsList.get(val).getFiber());
+        sugValLocal = (foodItemsList.get(val).getSugars());
+        protValLocal = (foodItemsList.get(val).getProtein());
+        potasValLocal = (foodItemsList.get(val).getPotassium());
+    }
+
+    private void setConfScreenTextViews() {
+
+//      TODO: format values to 1 decimal place before setting text
+
+        botCal.setText(String.valueOf(calValLocal * servingAmountValue));
+        botCarb.setText(String.valueOf(carbValLocal * servingAmountValue));
+        botFat.setText(String.valueOf(totFatValLocal * servingAmountValue));
+        botProtein.setText(String.valueOf(protValLocal * servingAmountValue));
+        calVal.setText(String.valueOf(calValLocal * servingAmountValue));
+        totFatVal.setText(String.valueOf(totFatValLocal * servingAmountValue));
+        satFatVal.setText(String.valueOf(satFatValLocal * servingAmountValue));
+        cholVal.setText(String.valueOf(cholValLocal * servingAmountValue));
+        carbVal.setText(String.valueOf(carbValLocal * servingAmountValue));
+        fibVal.setText(String.valueOf(fibValLocal * servingAmountValue));
+        sugVal.setText(String.valueOf(sugValLocal * servingAmountValue));
+        protVal.setText(String.valueOf(protValLocal * servingAmountValue));
+        potasVal.setText(String.valueOf(potasValLocal * servingAmountValue));
+
+
     }
 
 
@@ -542,18 +704,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         }
     }
 
-
-    public void hideLLButtons() {
-        L11.setVisibility(GONE);
-        L12.setVisibility(GONE);
-        L13.setVisibility(GONE);
-        L21.setVisibility(GONE);
-        L22.setVisibility(GONE);
-        L23.setVisibility(GONE);
-        L31.setVisibility(GONE);
-        L32.setVisibility(GONE);
-        L33.setVisibility(GONE);
-    }
+    /*
+    *    [END] Layout Modifier - Edit Text / Images [END]
+    */
 
     @Override
     public void onClick(View v) {
@@ -587,25 +740,37 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         } else if (i == noneOfThese.getId()) {
             //TODO: go to enter text mode4
         } else if (i == L11.getId()) {
-            System.out.println(foodItemsList.get(0));
+            goToConfirmationScreen(0);
+
         } else if (i == L12.getId()) {
-            System.out.println(foodItemsList.get(1));
+            goToConfirmationScreen(1);
 
         } else if (i == L13.getId()) {
-            System.out.println(foodItemsList.get(3));
+            goToConfirmationScreen(2);
 
         } else if (i == L21.getId()) {
+            goToConfirmationScreen(3);
 
         } else if (i == L22.getId()) {
+            goToConfirmationScreen(4);
 
         } else if (i == L23.getId()) {
+            goToConfirmationScreen(5);
 
         } else if (i == L31.getId()) {
+            goToConfirmationScreen(6);
 
         } else if (i == L32.getId()) {
+            goToConfirmationScreen(7);
 
         } else if (i == L33.getId()) {
+            goToConfirmationScreen(8);
 
+        } else if (i == backArrow.getId()) {
+            showAllAfterConf();
+
+        } else if (i == confConfirmSelection.getId()) {
+//            TODO: DO THE THING, SEND THE THING TO FIREBASE
         }
 
 

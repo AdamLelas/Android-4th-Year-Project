@@ -18,6 +18,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"
         android:layout_width="0dp"
@@ -30,33 +31,6 @@
         app:layout_constraintRight_toRightOf="parent"
         app:menu="@menu/navigation" />
 
-    <FrameLayout
-        android:id="@+id/contentLayout"
-        android:layout_width="91dp"
-        android:layout_height="76dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="68dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.454"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
 
-        <!--<ImageView-->
-        <!--android:id="@+id/ivPic"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="500dp"-->
-        <!--android:layout_marginTop="10dp"-->
-        <!--app:srcCompat="@mipmap/ic_launcher"-->
-        <!--/>-->
-
-        <ImageView
-            android:id="@+id/mImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@mipmap/ic_launcher" />
-
-
-    </FrameLayout>
 
 </android.support.constraint.ConstraintLayout>
