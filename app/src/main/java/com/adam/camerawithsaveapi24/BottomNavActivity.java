@@ -9,20 +9,30 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,18 +40,47 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-public class BottomNavActivity extends AppCompatActivity {
+import static android.view.View.*;
+
+public class BottomNavActivity extends AppCompatActivity implements OnClickListener {
     //TODO: Remove Text and Image if not used
     private TextView mTextMessage;
     private ImageView mImageView;
-    private FirebaseAuth mAuth;
 
     private String mCurrentPhotoPath;
     static final int REQUEST_IMAGE_CAPTURE = 1001;
     static final int REQUEST_TAKE_PHOTO = 1;
     private String todaysLogName;
+    private String timeNow;
+
+    private FirebaseAuth mAuth;
+    private FirebaseDatabase database;
+    private DatabaseReference dbRef;
+    private FirebaseUser user;
+    private List<FoodItem> foodItemsList;
+    private Button printButton;
+
+
+    private TextView tvDate, tvCalRem, tvBudgetVal, tvConsVal;
+
+
+    private double dailyCarb, dailyCal, dailyChol, dailyFib, dailyPro, dailySatFat, dailyTotFat, goal;
+
+    private LinearLayout progAdd;
+    private LayoutInflater inflater;
+    private View row;
+
+    private View includeLayout;
+
+
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter rvAdapter;
+    private RecyclerView.LayoutManager rvLayoutManager;
+
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -101,23 +140,138 @@ public class BottomNavActivity extends AppCompatActivity {
         startActivity(signUpIntent);
     }
 
+
+//    private RecyclerView recyclerView;
+//    private RecyclerView.Adapter rvAdapter;
+//    private RecyclerView.LayoutManager rvLayoutManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //TODO: Maybe remove casts
         super.onCreate(savedInstanceState);
-
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_bottom_nav);
-        mTextMessage = (TextView) findViewById(R.id.message);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        mTextMessage = findViewById(R.id.message);
+
+        includeLayout = findViewById(R.id.include_botnav);
+        tvBudgetVal = includeLayout.findViewById(R.id.tv_budget_val);
+        tvCalRem = includeLayout.findViewById(R.id.tv_cal_rem);
+        tvConsVal = includeLayout.findViewById(R.id.tv_cons_val);
+        tvDate = includeLayout.findViewById(R.id.tv_date);
+
+        BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         mAuth = FirebaseAuth.getInstance();
+        foodItemsList = new ArrayList<>();
+
+        //      Firebase
+        database = FirebaseDatabase.getInstance();
+        dbRef = database.getReference();
+        user = mAuth.getCurrentUser();
+
+        goal = 2000;
+
+        progAdd = includeLayout.findViewById(R.id.progAdd);
+        inflater = LayoutInflater.from(this);
+
+
+        timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
 
         try {
             createFoodLogFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        updateUI(user);
+
+        if (user != null) {
+            gatherTodaysFood();
+        } else {
+            System.out.println("USER WAS NULL");
+        }
+    }
+
+    public void gatherTodaysFood(/*Date inputDate*/) {
+
+        /*DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(inputDate).child("food");*/
+
+        DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food");
+        logRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                extractFoodLog(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        printArrayList();
+
+    }
+
+    public void printArrayList() {
+        System.out.println("PRINT ARRAY");
+        for (int i = 0; i < foodItemsList.size(); i++) {
+            System.out.println(foodItemsList.get(i));
+        }
+    }
+
+    public void createTVs() {
+
+    }
+
+    public void extractFoodLog(DataSnapshot dataSnapshot) {
+        for (DataSnapshot ds : dataSnapshot.getChildren()) {
+            FoodItem tFood = (ds.getValue(FoodItem.class));
+            if (tFood != null) {
+                tFood.setFood_name(ds.getKey());
+            }
+            foodItemsList.add(tFood);
+        }
+        getDailyTotals();
+    }
+
+    public void populateScreen() {
+        tvDate.setText(timeNow);
+        tvConsVal.setText(String.valueOf(dailyCal));
+        tvCalRem.setText(String.valueOf(goal - dailyCal));
+        tvBudgetVal.setText(String.valueOf(goal));
+
+//        TODO: More views to set here
+    }
+
+
+    public void getDailyTotals() {
+//        TODO: code the totaling of each nutritional info
+
+//        Reset Daily totals
+        dailyCarb = 0;
+        dailyCal = 0;
+        dailyChol = 0;
+        dailyFib = 0;
+        dailyPro = 0;
+        dailySatFat = 0;
+        dailyTotFat = 0;
+
+//        Populate daily totals
+        for (FoodItem i : foodItemsList) {
+            double servings = i.getServings();
+            dailyCarb = dailyCarb + (i.getCarbs() * servings);
+            dailyCal = dailyCal + (i.getCalories() * servings);
+            dailyChol = dailyChol + (i.getCholesterol() * servings);
+            dailyFib = dailyFib + (i.getFiber() * servings);
+            dailyPro = dailyPro + (i.getProtein() * servings);
+            dailySatFat = dailySatFat + (i.getSaturated_fat() * servings);
+            dailyTotFat = dailyTotFat + (i.getTotal_fat() * servings);
+        }
+        populateScreen();
     }
 
 
@@ -166,16 +320,9 @@ public class BottomNavActivity extends AppCompatActivity {
         return file.exists();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        FirebaseUser curUser = mAuth.getCurrentUser();
-        updateUI(curUser);
-    }
-
     private void updateUI(FirebaseUser firebaseUser) {
         if (firebaseUser != null) {
-            mTextMessage.setText(firebaseUser.getEmail().toString());
+//            mTextMessage.setText(firebaseUser.getEmail().toString());
         }
     }
 
@@ -204,6 +351,7 @@ public class BottomNavActivity extends AppCompatActivity {
     }
 
 
+    @Nullable
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -230,23 +378,7 @@ public class BottomNavActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-//            TODO: REMOVE COMMENTED OUT CODE
-            // Show the thumbnail on ImageView
-//            Uri imageUri = Uri.parse(mCurrentPhotoPath);
-//            File file = new File(imageUri.getPath());
-//            try {
-//                InputStream ims = new FileInputStream(file);
-//                Bitmap bm = BitmapFactory.decodeFile(mCurrentPhotoPath);
-//                mImageView.setImageBitmap(bm);
-//                mImageView.setImageBitmap(BitmapFactory.decodeStream(ims));
-//            } catch (FileNotFoundException e) {
-//                return;
-//            }
 
-
-//          TODO: REMOVE this?
-//            final byte[] imageBytes = createByteArray(mCurrentPhotoPath);
-//            recognizeConceptsActivity.onImagePicked(imageBytes);
 
             Intent displayPhotoIntent = new Intent(this, PhotoDisplayActivity.class);
             displayPhotoIntent.putExtra("fpath", mCurrentPhotoPath);
@@ -263,13 +395,11 @@ public class BottomNavActivity extends AppCompatActivity {
     }
 
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-//            Bundle extras = data.getExtras();
-//            Bitmap imageBitmap = (Bitmap) extras.get("data");
-//            mImageView.setImageBitmap(imageBitmap);
-//        }
-//    }
-
+    @Override
+    public void onClick(View v) {
+        int i = v.getId();
+        if (i == printButton.getId()) {
+            printArrayList();
+        }
+    }
 }

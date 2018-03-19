@@ -40,7 +40,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 //    private Button signUpButton;
 //    private Button googleSignInButton;
 
-    //firebase auth
+    //firebase authentication
     private FirebaseAuth mAuth;
 
     @Override

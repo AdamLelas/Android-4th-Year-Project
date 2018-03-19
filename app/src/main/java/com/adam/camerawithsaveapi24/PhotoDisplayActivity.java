@@ -33,8 +33,11 @@ import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -87,8 +90,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private EditText servingAmount;
     private int servingAmountValue;
 
-    //    Confirmation Screen TextViews
-    private TextView botCal, botCarb, botFat, botProtein, calVal, totFatVal, satFatVal, cholVal, carbVal, fibVal, sugVal, protVal, potasVal;
+//    Confirmation Screen TextViews
+    private TextView confItemName, botCal, botCarb, botFat, botProtein, calVal, totFatVal, satFatVal, cholVal, carbVal, fibVal, sugVal, protVal, potasVal;
 
 
 //    Confirmation Screen Views [END]
@@ -97,6 +100,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private List<FoodItem> foodItemsList = new ArrayList<>();
 
     //    maybe make an array instead
+    private String itemNameLocal;
     private double calValLocal;
     private double totFatValLocal;
     private double satFatValLocal;
@@ -223,6 +227,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         confItemScrollViewParent = includedConfLayout.findViewById(R.id.conf_item_vert_scroll_view);
         confTopBar = includedConfLayout.findViewById(R.id.conf_topbar);
 
+        confItemName = includedConfLayout.findViewById(R.id.conf_item_name);
+
+
         confConfirmSelection = includedConfLayout.findViewById(R.id.conf_tick);
         confConfirmSelection.setOnClickListener(this);
 
@@ -313,14 +320,15 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     /*
     * FIREBASE [START]
     */
-    public void sendDataToDataBase(int value) {
-        String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+    public void sendDataToDataBase(/*int value*/) {
+        final String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
         String hoursNow = new SimpleDateFormat("HH").format(new Date());
-        int hoursNowInt = Integer.parseInt(hoursNow);
-        String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
-        int check;
+        final int hoursNowInt = Integer.parseInt(hoursNow);
+        final String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
 
-        System.out.println(hoursNowInt);
+        System.out.println("Hours now int: " + hoursNowInt);
+
+        int check;
         if (hoursNowInt > 6 && hoursNowInt < 12) {
             check = 0;
         } else if (hoursNowInt < 16) {
@@ -331,9 +339,45 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             check = 3;
         }
 
-        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("1").child("calories").setValue(202);
-        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("carbs").setValue(333);
-        dbRef.child("users").child(user.getUid()).child(timeNow).child("food").child(mealTypeArray[check]).child("biscuit").child("protein").setValue(400);
+                                                                                        /*.child(mealTypeArray[check]).child(itemNameLocal)*/
+        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal);
+
+        child.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    System.out.println("onDataChange: IF");
+                    System.out.println(dataSnapshot.getValue());
+                    FoodItem tFood = (dataSnapshot.getValue(FoodItem.class));
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("servings").setValue(tFood.getServings()+servingAmountValue);
+
+                } else {
+                    System.out.println("onDataChange: ELSE");
+
+                                                                                        /*.child(mealTypeArray[check])*/
+                                                                                        /*.child(mealTypeArray[check])*/
+                                                                                        /*.child(mealTypeArray[check])*/
+                                                                                        /*.child(mealTypeArray[check])*/
+                                                                                        /*.child(mealTypeArray[check])*/
+                                                                                        /*.child(mealTypeArray[check])*/
+                                                                                        /*.child(mealTypeArray[check])*/
+                                                                                        /*.child(mealTypeArray[check])*/
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("servings").setValue(servingAmountValue);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("calories").setValue(calValLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("protein").setValue(protValLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("total_fat").setValue(totFatValLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("saturated_fat").setValue(satFatValLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("cholesterol").setValue(cholValLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("carbs").setValue(carbValLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("fiber").setValue(fibValLocal);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     /*
@@ -632,6 +676,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         hideAllForConf();
         showConf();
         setConfScreenLocalValues(val);
+        setConfScreenTextViews();
 //        TODO: Set all the values in here
     }
 
@@ -639,9 +684,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     * [END] Layout Modifiers - Show/Hide elements [END]
     */
 
-    //    [START] Layout Modifiers - Edit Text / Images [START]
+    //    [START] Layout Modifiers - Edit Text / Images [START] Q
 
     public void setConfScreenLocalValues(int val) {
+        itemNameLocal = (foodItemsList.get(val).getFood_name());
         calValLocal = (foodItemsList.get(val).getCalories());
         totFatValLocal = (foodItemsList.get(val).getTotal_fat());
         satFatValLocal = (foodItemsList.get(val).getSaturated_fat());
@@ -656,7 +702,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private void setConfScreenTextViews() {
 
 //      TODO: format values to 1 decimal place before setting text
-
+        confItemName.setText(itemNameLocal);
         botCal.setText(String.valueOf(calValLocal * servingAmountValue));
         botCarb.setText(String.valueOf(carbValLocal * servingAmountValue));
         botFat.setText(String.valueOf(totFatValLocal * servingAmountValue));
@@ -673,7 +719,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
 
     }
-
 
     @SuppressLint("SetTextI18n")
     public void setTextResultsButtons(int val) {
@@ -715,7 +760,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             //First concept
             if (buttonFirstClick) {
                 postNutritionNutrients(buildJsonPostNutrientsBody());
-                sendDataToDataBase(1);
+//                sendDataToDataBase(1);
                 buttonFirstClick = false;
             }
             displayResultsButtons(1);
@@ -738,7 +783,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             displayResultsButtons(3);
 
         } else if (i == noneOfThese.getId()) {
-            //TODO: go to enter text mode4
+            //TODO: go to enter text mode
+            Intent intent = new Intent(this, BottomNavActivity.class);
+            startActivity(intent);
         } else if (i == L11.getId()) {
             goToConfirmationScreen(0);
 
@@ -771,6 +818,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
         } else if (i == confConfirmSelection.getId()) {
 //            TODO: DO THE THING, SEND THE THING TO FIREBASE
+            sendDataToDataBase();
+
+
         }
 
 
