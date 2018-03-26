@@ -1,5 +1,8 @@
 package com.adam.camerawithsaveapi24;
 
+import static com.adam.camerawithsaveapi24.Tools.Utility.*;
+
+
 /**
  * Created by Adam on 25/02/2018.
  */
@@ -110,15 +113,7 @@ public class FoodItem {
     }
 
 
-    public static double parseDoubleSafely(String str) {
-        double result = 0;
-        try {
-            result = Double.parseDouble(str);
-        } catch (NullPointerException npe) {
-        } catch (NumberFormatException nfe) {
-        }
-        return result;
-    }
+
 
     public double getServing_weight() {
         return serving_weight;

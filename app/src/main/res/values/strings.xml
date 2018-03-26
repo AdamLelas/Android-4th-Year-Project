@@ -20,6 +20,24 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_user_details">UserDetailsActivity</string>
+
+
+    <!--Spinners-->
+    <string-array name="active_array">
+        <item>Sedentary</item>
+        <item>Lightly</item>
+        <item>Moderately</item>
+        <item>Very</item>
+        <item>Extremely</item>
+    </string-array>
+
+
+    <string-array name="gender_array">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+
 
 
 </resources>

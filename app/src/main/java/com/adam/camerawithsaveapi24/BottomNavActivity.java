@@ -23,6 +23,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,16 +48,13 @@ import java.util.List;
 import static android.view.View.*;
 
 public class BottomNavActivity extends AppCompatActivity implements OnClickListener {
-    //TODO: Remove Text and Image if not used
-    private TextView mTextMessage;
-    private ImageView mImageView;
 
     private String mCurrentPhotoPath;
     static final int REQUEST_IMAGE_CAPTURE = 1001;
     static final int REQUEST_TAKE_PHOTO = 1;
     private String todaysLogName;
     private String timeNow;
-
+    private UserDetails userDetails;
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
     private DatabaseReference dbRef;
@@ -66,20 +64,16 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
 
 
     private TextView tvDate, tvCalRem, tvBudgetVal, tvConsVal;
+    private ProgressBar calPB;
 
 
-    private double dailyCarb, dailyCal, dailyChol, dailyFib, dailyPro, dailySatFat, dailyTotFat, goal;
+    private double dailyCarb, dailyCal, dailyChol, dailyFib, dailyPro, dailySatFat, dailyTotFat, calRec;
 
     private LinearLayout progAdd;
     private LayoutInflater inflater;
     private View row;
 
     private View includeLayout;
-
-
-    private RecyclerView recyclerView;
-    private RecyclerView.Adapter rvAdapter;
-    private RecyclerView.LayoutManager rvLayoutManager;
 
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -141,42 +135,44 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
     }
 
 
-//    private RecyclerView recyclerView;
-//    private RecyclerView.Adapter rvAdapter;
-//    private RecyclerView.LayoutManager rvLayoutManager;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //TODO: Maybe remove casts
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_bottom_nav);
-        mTextMessage = findViewById(R.id.message);
 
+        //views
         includeLayout = findViewById(R.id.include_botnav);
         tvBudgetVal = includeLayout.findViewById(R.id.tv_budget_val);
         tvCalRem = includeLayout.findViewById(R.id.tv_cal_rem);
         tvConsVal = includeLayout.findViewById(R.id.tv_cons_val);
         tvDate = includeLayout.findViewById(R.id.tv_date);
+        calPB = includeLayout.findViewById(R.id.calories_percent_pb);
+        progAdd = includeLayout.findViewById(R.id.progAdd);
+        inflater = LayoutInflater.from(this);
 
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        mAuth = FirebaseAuth.getInstance();
+
         foodItemsList = new ArrayList<>();
 
+
+
         //      Firebase
+        mAuth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         dbRef = database.getReference();
         user = mAuth.getCurrentUser();
 
-        goal = 2000;
+        //calculates and sets the recommended calories
+        calRec = getRecCal();
 
-        progAdd = includeLayout.findViewById(R.id.progAdd);
-        inflater = LayoutInflater.from(this);
-
-
+//        Misc
         timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+        tvDate.setText(timeNow);
 
+        gatherTodaysFood();
+        gatherUserDetails();
         try {
             createFoodLogFile();
         } catch (IOException e) {
@@ -190,16 +186,18 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         updateUI(user);
 
         if (user != null) {
-            gatherTodaysFood();
+
         } else {
             System.out.println("USER WAS NULL");
         }
     }
 
-    public void gatherTodaysFood(/*Date inputDate*/) {
+    public double getRecCal(){
+//        TODO: Calculate recommended calories height/weight or w/e
+        return 2000;
+    }
 
-        /*DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(inputDate).child("food");*/
-
+    private void gatherTodaysFood() {
         DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food");
         logRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -213,8 +211,27 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
             }
         });
         printArrayList();
-
     }
+
+    private void gatherUserDetails(){
+        DatabaseReference userDetailsRef = dbRef.child("users").child(user.getUid()).child("user-details");
+        userDetailsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                extractUserDetails(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void extractUserDetails(DataSnapshot ds){
+        userDetails = ds.getValue(UserDetails.class);
+    }
+
 
     public void printArrayList() {
         System.out.println("PRINT ARRAY");
@@ -241,8 +258,8 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
     public void populateScreen() {
         tvDate.setText(timeNow);
         tvConsVal.setText(String.valueOf(dailyCal));
-        tvCalRem.setText(String.valueOf(goal - dailyCal));
-        tvBudgetVal.setText(String.valueOf(goal));
+        tvCalRem.setText(String.valueOf(calRec - dailyCal));
+        tvBudgetVal.setText(String.valueOf(calRec));
 
 //        TODO: More views to set here
     }
@@ -274,7 +291,7 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         populateScreen();
     }
 
-
+//TODO: REMOVE
     private void appendFoodLogFile(String[] strArr) throws IOException {
         String timeNow = new SimpleDateFormat("HH:mm").format(new Date());
         if (todaysLogName != null) {

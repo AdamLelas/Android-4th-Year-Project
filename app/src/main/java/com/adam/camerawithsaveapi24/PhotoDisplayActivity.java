@@ -25,6 +25,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 
+import com.adam.camerawithsaveapi24.Tools.Utility;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -286,15 +287,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     /*
     * MISCELLANEOUS [START]
     */
-    private static int parseIntSafely(String str) {
-        int result = 0;
-        try {
-            result = Integer.parseInt(str);
-        } catch (NullPointerException npe) {
-        } catch (NumberFormatException nfe) {
-        }
-        return result;
-    }
+
 
 
     protected byte[] getBytesFromFile(Bitmap bitmap) {
@@ -304,7 +297,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     }
 
     private int parseServingAmount() {
-        return parseIntSafely(servingAmount.getText().toString());
+        return Utility.parseIntSafely(servingAmount.getText().toString());
     }
 
     private void setServingAmountValue() {

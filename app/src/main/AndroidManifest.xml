@@ -39,7 +39,8 @@
         <activity android:name=".SignUpActivity" />
         <activity android:name=".SignInActivity" />
         <activity android:name=".AccountManagementActivity" />
-        <activity android:name=".MoreInformation"></activity>
+        <activity android:name=".MoreInformation" />
+        <activity android:name=".UserDetailsActivity"></activity>
     </application>
 
 </manifest>
