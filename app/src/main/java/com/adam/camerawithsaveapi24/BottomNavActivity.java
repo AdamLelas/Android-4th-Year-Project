@@ -155,8 +155,7 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         foodItemsList = new ArrayList<>();
-
-
+        int test;
 
         //      Firebase
         mAuth = FirebaseAuth.getInstance();
