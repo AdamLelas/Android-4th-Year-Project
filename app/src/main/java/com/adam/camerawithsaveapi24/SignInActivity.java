@@ -121,7 +121,7 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void displayBase(){
-        Intent displayBaseIntent = new Intent(this, BottomNavActivity.class);
+        Intent displayBaseIntent = new Intent(this, MainActivity.class);
         startActivity(displayBaseIntent);
     }
 
@@ -218,7 +218,7 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
         int i = v.getId();
         if (i == R.id.tvSkipForNowSI) {
 //            TODO: anonymous sign in?
-            Intent intent = new Intent(this, BottomNavActivity.class);
+            Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
         } else if (i == R.id.email_sign_in_button) {
             signInEmailPassword(editTextEmail.getText().toString().trim(),

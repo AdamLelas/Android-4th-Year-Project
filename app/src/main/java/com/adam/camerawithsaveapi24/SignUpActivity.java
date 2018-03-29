@@ -121,7 +121,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void redirectToBase(){
-        Intent baseIntent = new Intent(this, BottomNavActivity.class);
+        Intent baseIntent = new Intent(this, MainActivity.class);
         startActivity(baseIntent);
     }
 
@@ -185,7 +185,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
         } else if (i == R.id.skip_for_now_tv) {
 //TODO: Anonymous sign in?
-            Intent skipForNowIntent = new Intent(this, BottomNavActivity.class);
+            Intent skipForNowIntent = new Intent(this, MainActivity.class);
             startActivity(skipForNowIntent);
         } else if (i == R.id.already_registered_tv){
             Intent registeredAlreadyIntent = new Intent (this, SignInActivity.class);

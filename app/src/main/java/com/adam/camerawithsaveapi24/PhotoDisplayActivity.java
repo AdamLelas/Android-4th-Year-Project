@@ -1,6 +1,7 @@
 package com.adam.camerawithsaveapi24;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -88,6 +90,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private ProgressBar dialog;
 
     private int selectValue;
+    private String searchedWord = null;
 
     private AdapterConfirmItemsList adapterConfirmItemsList;
     private ListView selectedItemsListView;
@@ -172,6 +175,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
         Intent intent = getIntent();
         fpath = intent.getStringExtra("fpath");
+        searchedWord = intent.getStringExtra("searchTerm");
+
+
         Bitmap bm = BitmapFactory.decodeFile(fpath);
         imageBytes = getBytesFromFile(bm);
         imageView.setImageBitmap(bm);
@@ -291,7 +297,14 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         super.onStart();
         hideConf();
         hideButtons();
-        onImagePicked(imageBytes);
+        if (searchedWord != null) {
+            getNutritionInstantSearch(searchedWord, 0);
+            getNutritionInstantSearch(searchedWord, 1);
+            getNutritionInstantSearch(searchedWord, 2);
+            changeButtonText(searchedWord);
+        } else {
+            onImagePicked(imageBytes);
+        }
     }
 
     /*
@@ -375,7 +388,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("fiber").setValue(fibValLocal);
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("serving_weight_grams").setValue(servingWeightGramsLocal);
 
-                    Intent finished = new Intent(PhotoDisplayActivity.this, BottomNavActivity.class);
+                    Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
                     startActivity(finished);
                 }
             }
@@ -624,6 +637,14 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         b3.setText(concepts.get(2).name());
     }
 
+    private void changeButtonText(String searchTerm){
+        showButtons();
+        b1.setText(searchTerm);
+        b2.setText(searchTerm);
+        b3.setText(searchTerm);
+    }
+
+
     public void showConf() {
         includedConfLayout.setVisibility(VISIBLE);
         confBottomBar.setVisibility(VISIBLE);
@@ -740,30 +761,34 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
     @SuppressLint("SetTextI18n")
     public void setTextResultsButtons(int val) {
-        if (val == 0) {
-            L11TV1.setText(searchInstantNamesArray1.get(0));
-            L12TV1.setText(searchInstantNamesArray1.get(1));
-            L13TV1.setText(searchInstantNamesArray1.get(2));
+        try {
+            if (val == 0) {
+                L11TV1.setText(searchInstantNamesArray1.get(0));
+                L12TV1.setText(searchInstantNamesArray1.get(1));
+                L13TV1.setText(searchInstantNamesArray1.get(2));
 
-            L11TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(0));
-            L12TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(1));
-            L13TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(2));
-        } else if (val == 1) {
-            L21TV1.setText(searchInstantNamesArray2.get(0));
-            L22TV1.setText(searchInstantNamesArray2.get(1));
-            L23TV1.setText(searchInstantNamesArray2.get(2));
+                L11TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(0));
+                L12TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(1));
+                L13TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(2));
+            } else if (val == 1) {
+                L21TV1.setText(searchInstantNamesArray2.get(0));
+                L22TV1.setText(searchInstantNamesArray2.get(1));
+                L23TV1.setText(searchInstantNamesArray2.get(2));
 
-            L21TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(0));
-            L22TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(1));
-            L23TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(2));
-        } else if (val == 2) {
-            L31TV1.setText(searchInstantNamesArray3.get(0));
-            L32TV1.setText(searchInstantNamesArray3.get(1));
-            L33TV1.setText(searchInstantNamesArray3.get(2));
+                L21TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(0));
+                L22TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(1));
+                L23TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(2));
+            } else if (val == 2) {
+                L31TV1.setText(searchInstantNamesArray3.get(0));
+                L32TV1.setText(searchInstantNamesArray3.get(1));
+                L33TV1.setText(searchInstantNamesArray3.get(2));
 
-            L31TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(0));
-            L32TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(1));
-            L33TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(2));
+                L31TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(0));
+                L32TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(1));
+                L33TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(2));
+            }
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
 
@@ -803,6 +828,41 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         selectedItemsListView.setAdapter(adapterConfirmItemsList);
     }
 
+    private void afterTypedSearch(String searchTerm) {
+        Intent intent = new Intent(this, PhotoDisplayActivity.class);
+        intent.putExtra("fpath", fpath);
+        intent.putExtra("searchTerm", searchTerm);
+        startActivity(intent);
+    }
+
+    private void launchTypedSearchDialog() {
+        AlertDialog.Builder searchDialog = new AlertDialog.Builder(this);
+        final EditText et = new EditText(this);
+        searchDialog.setMessage("Type the name of each item");
+//        searchDialog.setTitle("Title");
+
+        searchDialog.setView(et);
+
+        searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String et_value = et.getText().toString();
+                afterTypedSearch(et_value);
+            }
+        });
+
+        searchDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent runaway = new Intent(PhotoDisplayActivity.this, MainActivity.class);
+                startActivity(runaway);
+            }
+        });
+
+        searchDialog.show();
+    }
+
+
     @Override
     public void onClick(View v) {
         int i = v.getId();
@@ -833,8 +893,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             displayResultsButtons(3);
 
         } else if (i == noneOfThese.getId()) {
-            Intent intent = new Intent(this, BottomNavActivity.class);
-            startActivity(intent);
+            launchTypedSearchDialog();
+
         } else if (i == L11.getId()) {
             goToConfirmationScreen(0);
 

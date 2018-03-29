@@ -46,12 +46,11 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import static android.view.View.*;
 import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
-public class BottomNavActivity extends AppCompatActivity implements OnClickListener {
+public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     private String mCurrentPhotoPath;
     static final int REQUEST_IMAGE_CAPTURE = 1001;
@@ -111,7 +110,7 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
                     findViewById(R.id.navigation_camera).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            if (ContextCompat.checkSelfPermission(BottomNavActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                                 dispatchTakePictureIntent();
                             } else {
                                 if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
@@ -405,7 +404,6 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-
 
             Intent displayPhotoIntent = new Intent(this, PhotoDisplayActivity.class);
             displayPhotoIntent.putExtra("fpath", mCurrentPhotoPath);

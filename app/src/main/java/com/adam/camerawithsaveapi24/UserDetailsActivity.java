@@ -82,7 +82,7 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
     }
 
     private void redirectToMain() {
-        Intent intent = new Intent(this, BottomNavActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
 
@@ -142,7 +142,7 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
     public void onClick(View v) {
         int i = v.getId();
         if (i == cancel.getId()) {
-            Intent botnav = new Intent(this, BottomNavActivity.class);
+            Intent botnav = new Intent(this, MainActivity.class);
             startActivity(botnav);
         } else if (i == save.getId()) {
             saveUpdate();

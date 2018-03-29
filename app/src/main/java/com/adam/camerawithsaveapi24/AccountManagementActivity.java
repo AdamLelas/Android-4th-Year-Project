@@ -31,7 +31,7 @@ public class AccountManagementActivity extends AppCompatActivity implements View
     }
 
     private void redirect(){
-        Intent redirect = new Intent(this, BottomNavActivity.class);
+        Intent redirect = new Intent(this, MainActivity.class);
         startActivity(redirect);
     }
 
