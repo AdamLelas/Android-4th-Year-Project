@@ -14,7 +14,6 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -23,10 +22,14 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.adam.camerawithsaveapi24.classes.FoodItem;
+import com.adam.camerawithsaveapi24.classes.UserDetails;
+import com.adam.camerawithsaveapi24.tools.AdapterLogList;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -46,6 +49,7 @@ import java.util.Date;
 import java.util.List;
 
 import static android.view.View.*;
+import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
 public class BottomNavActivity extends AppCompatActivity implements OnClickListener {
 
@@ -53,26 +57,30 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
     static final int REQUEST_IMAGE_CAPTURE = 1001;
     static final int REQUEST_TAKE_PHOTO = 1;
     private String todaysLogName;
-    private String timeNow;
+    private String timevalue;
+    private Date datetime;
     private UserDetails userDetails;
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
     private DatabaseReference dbRef;
     private FirebaseUser user;
-    private List<FoodItem> foodItemsList;
+    private ArrayList<FoodItem> foodItemsList;
     private Button printButton;
 
+    private ListView loglist;
+    private AdapterLogList adapterLogList;
 
     private TextView tvDate, tvCalRem, tvBudgetVal, tvConsVal;
     private ProgressBar calPB;
+
+    private final int places = 0;
 
 
     private double dailyCarb, dailyCal, dailyChol, dailyFib, dailyPro, dailySatFat, dailyTotFat, calRec;
 
     private LinearLayout progAdd;
     private LayoutInflater inflater;
-    private View row;
-
+    private ImageView dateminus, dateplus;
     private View includeLayout;
 
 
@@ -149,13 +157,19 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         tvDate = includeLayout.findViewById(R.id.tv_date);
         calPB = includeLayout.findViewById(R.id.calories_percent_pb);
         progAdd = includeLayout.findViewById(R.id.progAdd);
+        dateminus = includeLayout.findViewById(R.id.date_minus_bt);
+        dateminus.setOnClickListener(this);
+        dateplus = includeLayout.findViewById(R.id.date_plus_bt);
+        dateplus.setOnClickListener(this);
+        loglist = includeLayout.findViewById(R.id.log_list_lv);
+
+//        TODO: don't need this?
         inflater = LayoutInflater.from(this);
 
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         foodItemsList = new ArrayList<>();
-        int testtt;
 
         //      Firebase
         mAuth = FirebaseAuth.getInstance();
@@ -167,8 +181,9 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         calRec = getRecCal();
 
 //        Misc
-        timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
-        tvDate.setText(timeNow);
+        datetime = new Date();
+        timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+        tvDate.setText(timevalue);
 
         gatherTodaysFood();
         gatherUserDetails();
@@ -182,7 +197,7 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
     @Override
     protected void onStart() {
         super.onStart();
-        updateUI(user);
+//        updateUI(user);
 
         if (user != null) {
 
@@ -191,13 +206,13 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         }
     }
 
-    public double getRecCal(){
+    protected double getRecCal() {
 //        TODO: Calculate recommended calories height/weight or w/e
         return 2000;
     }
 
     private void gatherTodaysFood() {
-        DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food");
+        DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timevalue).child("food");
         logRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -209,10 +224,9 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
 
             }
         });
-        printArrayList();
     }
 
-    private void gatherUserDetails(){
+    private void gatherUserDetails() {
         DatabaseReference userDetailsRef = dbRef.child("users").child(user.getUid()).child("user-details");
         userDetailsRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -227,23 +241,17 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         });
     }
 
-    private void extractUserDetails(DataSnapshot ds){
+    private void extractUserDetails(DataSnapshot ds) {
         userDetails = ds.getValue(UserDetails.class);
     }
 
 
-    public void printArrayList() {
-        System.out.println("PRINT ARRAY");
-        for (int i = 0; i < foodItemsList.size(); i++) {
-            System.out.println(foodItemsList.get(i));
-        }
-    }
-
     public void createTVs() {
-
+//TODO: ??
     }
 
     public void extractFoodLog(DataSnapshot dataSnapshot) {
+        foodItemsList.clear();
         for (DataSnapshot ds : dataSnapshot.getChildren()) {
             FoodItem tFood = (ds.getValue(FoodItem.class));
             if (tFood != null) {
@@ -252,21 +260,24 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
             foodItemsList.add(tFood);
         }
         getDailyTotals();
+        adapterLogList = new AdapterLogList(this, 0, foodItemsList);
+        loglist.setAdapter(adapterLogList);
     }
 
-    public void populateScreen() {
-        tvDate.setText(timeNow);
-        tvConsVal.setText(String.valueOf(dailyCal));
-        tvCalRem.setText(String.valueOf(calRec - dailyCal));
-        tvBudgetVal.setText(String.valueOf(calRec));
+    //    TODO: remove extra function call unless more code added to this function
+    private void dateChanged() {
+        gatherTodaysFood();
+    }
 
-//        TODO: More views to set here
+    private void updateUI() {
+        tvDate.setText(timevalue);
+        tvConsVal.setText(String.valueOf(roundSafely(dailyCal, places)));
+        tvCalRem.setText(String.valueOf(roundSafely((calRec - dailyCal),places)));
+        tvBudgetVal.setText(String.valueOf(roundSafely(calRec, places)));
     }
 
 
     public void getDailyTotals() {
-//        TODO: code the totaling of each nutritional info
-
 //        Reset Daily totals
         dailyCarb = 0;
         dailyCal = 0;
@@ -287,10 +298,10 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
             dailySatFat = dailySatFat + (i.getSaturated_fat() * servings);
             dailyTotFat = dailyTotFat + (i.getTotal_fat() * servings);
         }
-        populateScreen();
+        updateUI();
     }
 
-//TODO: REMOVE
+    //TODO: REMOVE?
     private void appendFoodLogFile(String[] strArr) throws IOException {
         String timeNow = new SimpleDateFormat("HH:mm").format(new Date());
         if (todaysLogName != null) {
@@ -336,11 +347,11 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
         return file.exists();
     }
 
-    private void updateUI(FirebaseUser firebaseUser) {
-        if (firebaseUser != null) {
-//            mTextMessage.setText(firebaseUser.getEmail().toString());
-        }
-    }
+//    private void updateUI(FirebaseUser firebaseUser) {
+//        if (firebaseUser != null) {
+////            mTextMessage.setText(firebaseUser.getEmail().toString());
+//        }
+//    }
 
 
     private void dispatchTakePictureIntent() {
@@ -414,8 +425,18 @@ public class BottomNavActivity extends AppCompatActivity implements OnClickListe
     @Override
     public void onClick(View v) {
         int i = v.getId();
-        if (i == printButton.getId()) {
-            printArrayList();
+
+        if (i == dateminus.getId()) {
+            datetime = changeDate(datetime, -1);
+            timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+            dateChanged();
+        } else if (i == dateplus.getId()) {
+            //if date is today don't advance
+            if (!timevalue.equalsIgnoreCase(new SimpleDateFormat("dd-MM-yyyy").format(new Date()))) {
+                datetime = changeDate(datetime, 1);
+                timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+                dateChanged();
+            }
         }
     }
 }

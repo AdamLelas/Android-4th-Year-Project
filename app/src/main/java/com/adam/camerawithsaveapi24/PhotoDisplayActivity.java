@@ -15,17 +15,21 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 
-import com.adam.camerawithsaveapi24.Tools.Utility;
+import com.adam.camerawithsaveapi24.classes.FoodItem;
+import com.adam.camerawithsaveapi24.tools.AdapterConfirmItemsList;
+import com.adam.camerawithsaveapi24.tools.Utility;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -60,6 +64,7 @@ import clarifai2.dto.model.output.ClarifaiOutput;
 import clarifai2.dto.prediction.Concept;
 
 import static android.view.View.*;
+import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
 public class PhotoDisplayActivity extends AppCompatActivity implements OnClickListener {
 
@@ -67,6 +72,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private FirebaseDatabase database;
     private DatabaseReference dbRef;
     private FirebaseUser user;
+
+    private final int list_size1 = 310, list_size2 = 620, list_size3 = 930;
 
     private static final String TAG = "PhotoDisplayActivity";
     private final int ARRAYSIZE = 5;
@@ -76,14 +83,17 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     protected List<Concept> concepts = new ArrayList<>();
     private Button b1, b2, b3;
     private boolean buttonFirstClick = true;
-    private Button noneOfThese;
+    private Button noneOfThese, uploadButton;
     private ImageView imageView;
     private ProgressBar dialog;
 
-//    Confirmation Screen Views [START]
+    private int selectValue;
 
-    private LinearLayout confTopBar;
-    private LinearLayout confBottomBar;
+    private AdapterConfirmItemsList adapterConfirmItemsList;
+    private ListView selectedItemsListView;
+
+    private LinearLayout confTopBar, confBottomBar;
+    private LinearLayout ll_selected_list;
     private ScrollView confItemScrollViewParent;
     private View includedConfLayout;
     private ImageButton backArrow;
@@ -91,26 +101,17 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private EditText servingAmount;
     private int servingAmountValue;
 
-//    Confirmation Screen TextViews
-    private TextView confItemName, botCal, botCarb, botFat, botProtein, calVal, totFatVal, satFatVal, cholVal, carbVal, fibVal, sugVal, protVal, potasVal;
-
-
-//    Confirmation Screen Views [END]
-
+    private TextView confItemName, botCal, botCarb, botFat, botProtein,
+            calVal, totFatVal, satFatVal, cholVal, carbVal,
+            fibVal, sugVal, protVal, potasVal;
 
     private List<FoodItem> foodItemsList = new ArrayList<>();
 
     //    maybe make an array instead
     private String itemNameLocal;
-    private double calValLocal;
-    private double totFatValLocal;
-    private double satFatValLocal;
-    private double cholValLocal;
-    private double carbValLocal;
-    private double fibValLocal;
-    private double sugValLocal;
-    private double protValLocal;
-    private double potasValLocal;
+    private double calValLocal, totFatValLocal, satFatValLocal,
+            cholValLocal, carbValLocal, fibValLocal, sugValLocal,
+            protValLocal, potasValLocal, servingWeightGramsLocal;
 
 
     //LinearLayout - buttons
@@ -129,6 +130,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private List<String> searchInstantNamesArray3 = new ArrayList<>();
     private List<String> searchInstantServingUnitArray3 = new ArrayList<>();
 
+    private ArrayList<FoodItem> selectedList = new ArrayList<>();
 
     //    private String queryString = null;
     private final String NUTRITION_INSTANT_URL_PREFIX = "https://trackapi.nutritionix.com/v2/search/instant?query=";
@@ -161,6 +163,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         noneOfThese = findViewById(R.id.food_select_button_none);
         noneOfThese.setOnClickListener(this);
 
+        uploadButton = findViewById(R.id.upload_to_firebase_button);
+        uploadButton.setOnClickListener(this);
+
+        ll_selected_list = findViewById(R.id.list_ll);
 
         dialog = findViewById(R.id.photo_display_progress_bar);
 
@@ -273,6 +279,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         sugVal = includedConfLayout.findViewById(R.id.conf_sugar_disp_value);
         protVal = includedConfLayout.findViewById(R.id.conf_protein_disp_value);
         potasVal = includedConfLayout.findViewById(R.id.conf_potassium_disp_value);
+
+        selectedItemsListView = findViewById(R.id.selected_items_lv);
+
+
     }
 
 
@@ -287,7 +297,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     /*
     * MISCELLANEOUS [START]
     */
-
 
 
     protected byte[] getBytesFromFile(Bitmap bitmap) {
@@ -315,22 +324,23 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     */
     public void sendDataToDataBase(/*int value*/) {
         final String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
-        String hoursNow = new SimpleDateFormat("HH").format(new Date());
-        final int hoursNowInt = Integer.parseInt(hoursNow);
-        final String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
 
-        System.out.println("Hours now int: " + hoursNowInt);
+//        String hoursNow = new SimpleDateFormat("HH").format(new Date());
+//        final int hoursNowInt = Integer.parseInt(hoursNow);
+//        final String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
+//
+//        System.out.println("Hours now int: " + hoursNowInt);
 
-        int check;
-        if (hoursNowInt > 6 && hoursNowInt < 12) {
-            check = 0;
-        } else if (hoursNowInt < 16) {
-            check = 1;
-        } else if (hoursNowInt < 18) {
-            check = 2;
-        } else {
-            check = 3;
-        }
+//        int check;
+//        if (hoursNowInt > 6 && hoursNowInt < 12) {
+//            check = 0;
+//        } else if (hoursNowInt < 16) {
+//            check = 1;
+//        } else if (hoursNowInt < 18) {
+//            check = 2;
+//        } else {
+//            check = 3;
+//        }
 
                                                                                         /*.child(mealTypeArray[check]).child(itemNameLocal)*/
         DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal);
@@ -342,7 +352,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     System.out.println("onDataChange: IF");
                     System.out.println(dataSnapshot.getValue());
                     FoodItem tFood = (dataSnapshot.getValue(FoodItem.class));
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("servings").setValue(tFood.getServings()+servingAmountValue);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("servings").setValue(tFood.getServings() + servingAmountValue);
 
                 } else {
                     System.out.println("onDataChange: ELSE");
@@ -363,6 +373,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("cholesterol").setValue(cholValLocal);
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("carbs").setValue(carbValLocal);
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("fiber").setValue(fibValLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("serving_weight_grams").setValue(servingWeightGramsLocal);
+
+                    Intent finished = new Intent(PhotoDisplayActivity.this, BottomNavActivity.class);
+                    startActivity(finished);
                 }
             }
 
@@ -611,12 +625,14 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     }
 
     public void showConf() {
+        includedConfLayout.setVisibility(VISIBLE);
         confBottomBar.setVisibility(VISIBLE);
         confItemScrollViewParent.setVisibility(VISIBLE);
         confTopBar.setVisibility(VISIBLE);
     }
 
     public void hideConf() {
+        includedConfLayout.setVisibility(GONE);
         confBottomBar.setVisibility(GONE);
         confItemScrollViewParent.setVisibility(GONE);
         confTopBar.setVisibility(GONE);
@@ -625,13 +641,20 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private void hideAllForConf() {
         hideLLButtons();
         hideButtons();
+        uploadButton.setVisibility(GONE);
+        selectedItemsListView.setVisibility(GONE);
         imageView.setVisibility(GONE);
     }
 
     private void showAllAfterConf() {
+        if (selectedList.size() >= 1) {
+            uploadButton.setVisibility(VISIBLE);
+        }
         hideConf();
         showButtons();
         imageView.setVisibility(VISIBLE);
+        selectedItemsListView.setVisibility(VISIBLE);
+
     }
 
     public void hideLLButtons() {
@@ -666,6 +689,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     }
 
     public void goToConfirmationScreen(int val) {
+        selectValue = val;
         hideAllForConf();
         showConf();
         setConfScreenLocalValues(val);
@@ -690,25 +714,26 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         sugValLocal = (foodItemsList.get(val).getSugars());
         protValLocal = (foodItemsList.get(val).getProtein());
         potasValLocal = (foodItemsList.get(val).getPotassium());
+        servingWeightGramsLocal = (foodItemsList.get(val).getServing_weight_grams());
     }
 
     private void setConfScreenTextViews() {
 
-//      TODO: format values to 1 decimal place before setting text
+//      TODO: format values to 1 decimal place before setting textBV
         confItemName.setText(itemNameLocal);
-        botCal.setText(String.valueOf(calValLocal * servingAmountValue));
-        botCarb.setText(String.valueOf(carbValLocal * servingAmountValue));
-        botFat.setText(String.valueOf(totFatValLocal * servingAmountValue));
-        botProtein.setText(String.valueOf(protValLocal * servingAmountValue));
-        calVal.setText(String.valueOf(calValLocal * servingAmountValue));
-        totFatVal.setText(String.valueOf(totFatValLocal * servingAmountValue));
-        satFatVal.setText(String.valueOf(satFatValLocal * servingAmountValue));
-        cholVal.setText(String.valueOf(cholValLocal * servingAmountValue));
-        carbVal.setText(String.valueOf(carbValLocal * servingAmountValue));
-        fibVal.setText(String.valueOf(fibValLocal * servingAmountValue));
-        sugVal.setText(String.valueOf(sugValLocal * servingAmountValue));
-        protVal.setText(String.valueOf(protValLocal * servingAmountValue));
-        potasVal.setText(String.valueOf(potasValLocal * servingAmountValue));
+        botCal.setText(String.valueOf(roundSafely((calValLocal * servingAmountValue), 1)));
+        botCarb.setText(String.valueOf(roundSafely((carbValLocal * servingAmountValue), 1)));
+        botFat.setText(String.valueOf(roundSafely((totFatValLocal * servingAmountValue), 1)));
+        botProtein.setText(String.valueOf(roundSafely((protValLocal * servingAmountValue), 1)));
+        calVal.setText(String.valueOf(roundSafely((calValLocal * servingAmountValue), 1)));
+        totFatVal.setText(String.valueOf(roundSafely((totFatValLocal * servingAmountValue), 1)));
+        satFatVal.setText(String.valueOf(roundSafely((satFatValLocal * servingAmountValue), 1)));
+        cholVal.setText(String.valueOf(roundSafely((cholValLocal * servingAmountValue), 1)));
+        carbVal.setText(String.valueOf(roundSafely((carbValLocal * servingAmountValue), 1)));
+        fibVal.setText(String.valueOf(roundSafely((fibValLocal * servingAmountValue), 1)));
+        sugVal.setText(String.valueOf(roundSafely((sugValLocal * servingAmountValue), 1)));
+        protVal.setText(String.valueOf(roundSafely((protValLocal * servingAmountValue), 1)));
+        potasVal.setText(String.valueOf(roundSafely((potasValLocal * servingAmountValue), 1)));
 
 
     }
@@ -720,31 +745,63 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             L12TV1.setText(searchInstantNamesArray1.get(1));
             L13TV1.setText(searchInstantNamesArray1.get(2));
 
-            L11TV2.setText("Serving Size:" + searchInstantServingUnitArray1.get(0));
-            L12TV2.setText("Serving Size:" + searchInstantServingUnitArray1.get(1));
-            L13TV2.setText("Serving Size:" + searchInstantServingUnitArray1.get(2));
+            L11TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(0));
+            L12TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(1));
+            L13TV2.setText("Serving Size: " + searchInstantServingUnitArray1.get(2));
         } else if (val == 1) {
             L21TV1.setText(searchInstantNamesArray2.get(0));
             L22TV1.setText(searchInstantNamesArray2.get(1));
             L23TV1.setText(searchInstantNamesArray2.get(2));
 
-            L21TV2.setText("Serving Size:" + searchInstantServingUnitArray2.get(0));
-            L22TV2.setText("Serving Size:" + searchInstantServingUnitArray2.get(1));
-            L23TV2.setText("Serving Size:" + searchInstantServingUnitArray2.get(2));
+            L21TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(0));
+            L22TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(1));
+            L23TV2.setText("Serving Size: " + searchInstantServingUnitArray2.get(2));
         } else if (val == 2) {
             L31TV1.setText(searchInstantNamesArray3.get(0));
             L32TV1.setText(searchInstantNamesArray3.get(1));
             L33TV1.setText(searchInstantNamesArray3.get(2));
 
-            L31TV2.setText("Serving Size:" + searchInstantServingUnitArray3.get(0));
-            L32TV2.setText("Serving Size:" + searchInstantServingUnitArray3.get(1));
-            L33TV2.setText("Serving Size:" + searchInstantServingUnitArray3.get(2));
+            L31TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(0));
+            L32TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(1));
+            L33TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(2));
         }
     }
 
     /*
     *    [END] Layout Modifier - Edit Text / Images [END]
     */
+
+
+    private void setParamsSelectList(int h) {
+        ViewGroup.LayoutParams params = ll_selected_list.getLayoutParams();
+
+
+        params.height = (int) convertPixelsToDp(h);
+        ll_selected_list.setLayoutParams(params);
+    }
+
+    private void addToSelectedList() {
+        FoodItem tempFood = foodItemsList.get(selectValue);
+        tempFood.setServings(parseServingAmount());
+        selectedList.add(tempFood);
+
+        switch (selectedList.size()) {
+            case 1:
+                setParamsSelectList(list_size1);
+                break;
+            case 2:
+                setParamsSelectList(list_size2);
+                break;
+            case 3:
+                setParamsSelectList(list_size3);
+                break;
+            default:
+        }
+
+
+        adapterConfirmItemsList = new AdapterConfirmItemsList(this, 0, selectedList);
+        selectedItemsListView.setAdapter(adapterConfirmItemsList);
+    }
 
     @Override
     public void onClick(View v) {
@@ -776,7 +833,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             displayResultsButtons(3);
 
         } else if (i == noneOfThese.getId()) {
-            //TODO: go to enter text mode
             Intent intent = new Intent(this, BottomNavActivity.class);
             startActivity(intent);
         } else if (i == L11.getId()) {
@@ -810,10 +866,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             showAllAfterConf();
 
         } else if (i == confConfirmSelection.getId()) {
-//            TODO: DO THE THING, SEND THE THING TO FIREBASE
+            addToSelectedList();
+            showAllAfterConf();
+        } else if (i == uploadButton.getId()) {
             sendDataToDataBase();
-
-
         }
 
 

@@ -1,26 +1,18 @@
 package com.adam.camerawithsaveapi24;
 
-import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
+import android.annotation.SuppressLint;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
-
-
-
-/**
- * Created by Adam on 16/02/2018.
- */
-
 
 public class NutritionSingleton extends Application {
 
     private static NutritionSingleton instance = null;
     private static Context context;
     private final String TAG = "NutritionSingleton";
-
 
 
     //Volley
@@ -42,13 +34,12 @@ public class NutritionSingleton extends Application {
     }
 
 
-
     private NutritionSingleton(Context context) {
         requestQueue = Volley.newRequestQueue(context.getApplicationContext());
     }
 
-    public RequestQueue getRequestQueue(){
-        if(requestQueue == null){
+    public RequestQueue getRequestQueue() {
+        if (requestQueue == null) {
             getInstance(context.getApplicationContext());
         }
         return requestQueue;

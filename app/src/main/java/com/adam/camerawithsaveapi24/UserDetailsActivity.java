@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.adam.camerawithsaveapi24.classes.UserDetails;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -21,7 +22,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.Map;
 
-import static com.adam.camerawithsaveapi24.Tools.Utility.*;
+import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
 public class UserDetailsActivity extends AppCompatActivity implements View.OnClickListener {
 

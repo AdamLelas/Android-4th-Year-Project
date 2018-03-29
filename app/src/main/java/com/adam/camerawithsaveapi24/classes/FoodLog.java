@@ -1,4 +1,4 @@
-package com.adam.camerawithsaveapi24;
+package com.adam.camerawithsaveapi24.classes;
 
 import java.util.Date;
 import java.util.List;

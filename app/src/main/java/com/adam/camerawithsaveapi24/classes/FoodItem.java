@@ -1,6 +1,6 @@
-package com.adam.camerawithsaveapi24;
+package com.adam.camerawithsaveapi24.classes;
 
-import static com.adam.camerawithsaveapi24.Tools.Utility.*;
+import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
 
 /**
@@ -10,8 +10,7 @@ import static com.adam.camerawithsaveapi24.Tools.Utility.*;
 public class FoodItem {
 
     private String food_name;
-
-    private double serving_weight; //grams
+    private double serving_weight_grams; //grams
     private double calories;
     private double total_fat;
     private double saturated_fat;
@@ -24,8 +23,8 @@ public class FoodItem {
     private double potassium;
     private double servings;
 
-    public void setServing_weight(double serving_weight) {
-        this.serving_weight = serving_weight;
+    public void setServing_weight_grams(double serving_weight_grams) {
+        this.serving_weight_grams = serving_weight_grams;
     }
 
     public void setCalories(double calories) {
@@ -81,7 +80,7 @@ public class FoodItem {
 
     public FoodItem(String fn, String serving_weight, String calories, String total_fat, String saturated_fat, String cholesterol, String sodium, String carbs, String fiber, String sugars, String protein, String potassium) {
         this.food_name = fn;
-        this.serving_weight = parseDoubleSafely(serving_weight);
+        this.serving_weight_grams = parseDoubleSafely(serving_weight);
         this.calories = parseDoubleSafely(calories);
         this.total_fat = parseDoubleSafely(total_fat);
         this.saturated_fat = parseDoubleSafely(saturated_fat);
@@ -98,7 +97,7 @@ public class FoodItem {
                     String saturated_fat, String cholesterol, String sodium, String carbs,
                     String fiber, String sugars, String protein, String potassium, String servAmt) {
         this.food_name = fn;
-        this.serving_weight = parseDoubleSafely(serving_weight);
+        this.serving_weight_grams = parseDoubleSafely(serving_weight);
         this.calories = parseDoubleSafely(calories);
         this.total_fat = parseDoubleSafely(total_fat);
         this.saturated_fat = parseDoubleSafely(saturated_fat);
@@ -115,8 +114,8 @@ public class FoodItem {
 
 
 
-    public double getServing_weight() {
-        return serving_weight;
+    public double getServing_weight_grams() {
+        return serving_weight_grams;
     }
 
     public double getCalories() {
@@ -172,7 +171,7 @@ public class FoodItem {
         return
                 "Food Item : " + this.food_name +
                         "Num Servings: " + this.servings +
-                        " Serving_weight: " + this.serving_weight +
+                        " Serving_weight: " + this.serving_weight_grams +
                         " Calories: " + this.calories +
                         " Total Fat: " + this.total_fat +
                         " Sat_Fat: " + this.saturated_fat +

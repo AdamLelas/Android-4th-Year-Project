@@ -86,7 +86,7 @@
 
     <Spinner
         android:id="@+id/edl_activity_level_dropdown"
-        android:layout_width="120dp"
+        android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -94,12 +94,10 @@
 
     <Spinner
         android:id="@+id/edl_gender_dropdown"
-        android:layout_width="120dp"
+        android:layout_width="wrap_content"
         android:layout_height="40dp"
-        android:layout_marginEnd="114dp"
-        android:layout_marginStart="14dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/edl_activity_level_dropdown"
         app:layout_constraintTop_toBottomOf="@+id/edl_tv6" />
 
     <EditText
@@ -140,10 +138,10 @@
         android:id="@+id/edl_tv6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="51dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="89dp"
+        android:layout_marginTop="4dp"
         android:text="Gender"
-        app:layout_constraintStart_toEndOf="@+id/edl_tv5"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edl_goal_weight_et" />
 
     <TextView
