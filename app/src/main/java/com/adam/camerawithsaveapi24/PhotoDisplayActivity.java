@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -68,17 +69,18 @@ import clarifai2.dto.prediction.Concept;
 import static android.view.View.*;
 import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
-public class PhotoDisplayActivity extends AppCompatActivity implements OnClickListener {
+public class PhotoDisplayActivity extends AppCompatActivity implements OnClickListener{
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
     private DatabaseReference dbRef;
     private FirebaseUser user;
 
-    private final int list_size1 = 310, list_size2 = 620, list_size3 = 930;
+    private final int list_size1 = 350, list_size2 = 700, list_size3 = 1050;
 
     private static final String TAG = "PhotoDisplayActivity";
     private final int ARRAYSIZE = 5;
+
 
     private String fpath;
     private byte[] imageBytes;
@@ -141,11 +143,18 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
     private final String NUTRITION_NUTRIENTS_URL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
+    private static final String DEBUG_GESTURES_TAG = "Gestures";
+    private GestureDetector detector;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_display);
+
+        //Swipe Gestures
+//        detector = new GestureDetector(this, new MyGestureListener());
 
 
         //Firebase
@@ -289,6 +298,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         selectedItemsListView = findViewById(R.id.selected_items_lv);
 
 
+//        gestureDetector = new GestureDetector(getActivity())
+
+
     }
 
 
@@ -311,6 +323,24 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     * MISCELLANEOUS [START]
     */
 
+//    public boolean onTouchEvent(MotionEvent event){
+//        this.detector.onTouchEvent(event);
+//        return super.onTouchEvent(event);
+//    }
+//
+//    class MyGestureListener extends GestureDetector.SimpleOnGestureListener{
+//        private static final String DEBUG_TAG = "Gestures";
+//
+//        @Override
+//        public boolean onDown(MotionEvent event){
+//            return true;
+//        }
+//
+//        @Override
+//        public boolean onFling(){
+//
+//        }
+//    }
 
     protected byte[] getBytesFromFile(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -335,9 +365,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     /*
     * FIREBASE [START]
     */
-    public void sendDataToDataBase(/*int value*/) {
+    public void sendDataToDataBase(final FoodItem item) {
         final String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
-
 //        String hoursNow = new SimpleDateFormat("HH").format(new Date());
 //        final int hoursNowInt = Integer.parseInt(hoursNow);
 //        final String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
@@ -355,42 +384,34 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 //            check = 3;
 //        }
 
-                                                                                        /*.child(mealTypeArray[check]).child(itemNameLocal)*/
-        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal);
+
+        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name());
 
         child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+
+
                 if (dataSnapshot.exists()) {
                     System.out.println("onDataChange: IF");
                     System.out.println(dataSnapshot.getValue());
                     FoodItem tFood = (dataSnapshot.getValue(FoodItem.class));
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("servings").setValue(tFood.getServings() + servingAmountValue);
-
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("servings").setValue(tFood.getServings() + servingAmountValue);
                 } else {
                     System.out.println("onDataChange: ELSE");
 
-                                                                                        /*.child(mealTypeArray[check])*/
-                                                                                        /*.child(mealTypeArray[check])*/
-                                                                                        /*.child(mealTypeArray[check])*/
-                                                                                        /*.child(mealTypeArray[check])*/
-                                                                                        /*.child(mealTypeArray[check])*/
-                                                                                        /*.child(mealTypeArray[check])*/
-                                                                                        /*.child(mealTypeArray[check])*/
-                                                                                        /*.child(mealTypeArray[check])*/
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("servings").setValue(servingAmountValue);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("calories").setValue(calValLocal);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("protein").setValue(protValLocal);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("total_fat").setValue(totFatValLocal);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("saturated_fat").setValue(satFatValLocal);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("cholesterol").setValue(cholValLocal);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("carbs").setValue(carbValLocal);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("fiber").setValue(fibValLocal);
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(itemNameLocal).child("serving_weight_grams").setValue(servingWeightGramsLocal);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("servings").setValue(item.getServings());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("calories").setValue(item.getCalories());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("protein").setValue(item.getProtein());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("total_fat").setValue(item.getTotal_fat());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("saturated_fat").setValue(item.getSaturated_fat());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("cholesterol").setValue(item.getCholesterol());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("carbs").setValue(item.getCarbs());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("fiber").setValue(item.getFiber());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("serving_weight_grams").setValue(item.getServing_weight_grams());
 
-                    Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
-                    startActivity(finished);
                 }
+
             }
 
             @Override
@@ -398,6 +419,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
             }
         });
+//        }
+        Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
+        startActivity(finished);
     }
 
     /*
@@ -438,7 +462,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         }
 
         for (int i = 0; i < jsonArray.length(); i++) {
+            System.out.println("ExtractPostNutrientsData" + i);
             try {
+                System.out.println("ExtractPostNutrientsData inside try" + i);
+
                 JSONObject tempJSONObject = jsonArray.getJSONObject(i);
                 FoodItem tempFoodItem = new FoodItem(
                         tempJSONObject.getString("food_name"),
@@ -544,7 +571,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
 
     public void getNutritionInstantSearch(String queryValue, final int flag) {
-        Log.i("GetNutritionButton_Pressed", "Value:" + queryValue);
+        Log.i("InstantSearch", "Value:" + queryValue);
         String REQUEST_TAG = "Nutrition_GET";
         String completedGetString = NUTRITION_INSTANT_URL_PREFIX + queryValue + NUTRITION_INSTANT_URL_POSTFIX;
 
@@ -637,7 +664,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         b3.setText(concepts.get(2).name());
     }
 
-    private void changeButtonText(String searchTerm){
+    private void changeButtonText(String searchTerm) {
         showButtons();
         b1.setText(searchTerm);
         b2.setText(searchTerm);
@@ -787,7 +814,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                 L32TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(1));
                 L33TV2.setText("Serving Size: " + searchInstantServingUnitArray3.get(2));
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -826,6 +853,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
         adapterConfirmItemsList = new AdapterConfirmItemsList(this, 0, selectedList);
         selectedItemsListView.setAdapter(adapterConfirmItemsList);
+
     }
 
     private void afterTypedSearch(String searchTerm) {
@@ -929,7 +957,14 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             addToSelectedList();
             showAllAfterConf();
         } else if (i == uploadButton.getId()) {
-            sendDataToDataBase();
+            for (FoodItem item : selectedList) {
+
+                sendDataToDataBase(item);
+
+
+            }
+
+
         }
 
 
