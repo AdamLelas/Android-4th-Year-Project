@@ -190,16 +190,17 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         datetime = new Date();
         timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
         tvDate.setText(timevalue);
-
-        gatherTodaysFood();
-        gatherUserDetails();
+        if (user != null) {
+            gatherTodaysFood();
+            gatherUserDetails();
+        }
         try {
             createFoodLogFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-         creator = new SwipeMenuCreator() {
+        creator = new SwipeMenuCreator() {
 
             @Override
             public void create(SwipeMenu menu) {
@@ -207,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 SwipeMenuItem openItem = new SwipeMenuItem(
                         getApplicationContext());
                 // set item background
-                openItem.setBackground(new ColorDrawable(Color.rgb(0x66, 0xff,0x33)));
+                openItem.setBackground(new ColorDrawable(Color.rgb(0x66, 0xff, 0x33)));
                 // set item width
                 openItem.setWidth(170);
                 openItem.setIcon(R.drawable.ic_tick);
@@ -215,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 menu.addMenuItem(openItem);
             }
         };
-
 
 
     }
@@ -227,8 +227,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         quickListView = quickDialog.findViewById(R.id.quick_list_lv);
         final TextView tv = quickDialog.findViewById(R.id.empty_list_tv);
-
-
 
 
         quickListView.setMenuCreator(creator);
@@ -284,7 +282,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         quickDialog.show();
     }
 
-    private void itemAddedDialog(){
+    private void itemAddedDialog() {
         AlertDialog.Builder itemAddedDialog = new AlertDialog.Builder(this);
 //        final TextView et = new TextView(this);
         itemAddedDialog.setMessage("Item added");
@@ -342,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private void afterTypedSearch(String searchTerm) {
         Intent intent = new Intent(this, PhotoDisplayActivity.class);
         intent.putExtra("searchTerm", searchTerm);
+        intent.putExtra("fpath", "placeholder");
         startActivity(intent);
     }
 

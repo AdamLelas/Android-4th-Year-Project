@@ -50,6 +50,8 @@ import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -57,6 +59,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -87,6 +91,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private FirebaseDatabase database;
     private DatabaseReference dbRef;
     private FirebaseUser user;
+    private StorageReference storageRef;
+    private FirebaseStorage storage;
 
     private final int list_size1 = 350, list_size2 = 700, list_size3 = 1050;
 
@@ -190,6 +196,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         database = FirebaseDatabase.getInstance();
         dbRef = database.getReference();
         user = mAuth.getCurrentUser();
+        storage =  FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
 
         //Set up views findViewById
         imageView = findViewById(R.id.photoDisplayView);
@@ -211,13 +219,26 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         dialog = findViewById(R.id.photo_display_progress_bar);
 
         Intent intent = getIntent();
-        fpath = intent.getStringExtra("fpath");
+        try {
+            fpath = intent.getStringExtra("fpath");
+        } catch (Exception e) {
+            System.out.println("catch block fpath");
+        }
         searchedWord = intent.getStringExtra("searchTerm");
 
+        if (!(fpath.equalsIgnoreCase("placeholder"))) {
+            Bitmap bm = BitmapFactory.decodeFile(fpath);
+            imageBytes = getBytesFromFile(bm);
+            imageView.setImageBitmap(bm);
+        } else {
+            System.out.println("Else block");
+            StorageReference placeholderRef = storageRef.child("public/Placeholder-food.jpg");
+            Glide.with(this)
+                    .using(new FirebaseImageLoader())
+                    .load(placeholderRef)
+                    .into(imageView);
+        }
 
-        Bitmap bm = BitmapFactory.decodeFile(fpath);
-        imageBytes = getBytesFromFile(bm);
-        imageView.setImageBitmap(bm);
 
 //        LinearLayouts - buttons
         L11 = findViewById(R.id.c1_linearLayout1);
@@ -1033,7 +1054,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         showButtons();
         imageView.setVisibility(VISIBLE);
         selectedItemsListView.setVisibility(VISIBLE);
-
     }
 
     public void hideLLButtons() {
@@ -1200,6 +1220,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             default:
         }
         updateAdapter();
+        showAllAfterConf();
     }
 
 
@@ -1221,6 +1242,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             default:
         }
         updateAdapter();
+        showAllAfterConf();
     }
 
     private void launchAddSweetDialog() {
@@ -1543,12 +1565,13 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             showAllAfterConf();
 
         } else if (i == confConfirmSelection.getId()) {
-            showAllAfterConf();
+
             if (milkAmtML != 0 || sweetvalue != 0 || sugarvalue != 0 || honeyvalue != 0) {
                 customizedDrink(sugarvalue, sweetvalue, honeyvalue, milkAmtML, milkSelection);
             } else {
                 addToSelectedList();
             }
+//            showAllAfterConf();
             milkAmtML = 0;
             sweetvalue = 0;
             sugarvalue = 0;
