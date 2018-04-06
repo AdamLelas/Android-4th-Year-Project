@@ -1,8 +1,11 @@
-package com.adam.camerawithsaveapi24;
+package com.adam.camerawithsaveapi24.tools;
 
 import android.app.Application;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.adam.camerawithsaveapi24.R;
+
 import clarifai2.api.ClarifaiBuilder;
 import clarifai2.api.ClarifaiClient;
 import okhttp3.OkHttpClient;
@@ -11,7 +14,7 @@ import timber.log.Timber;
 
 import java.util.concurrent.TimeUnit;
 
-
+//Clarifai client builder
 public class App extends Application {
 
     private static App INSTANCE;

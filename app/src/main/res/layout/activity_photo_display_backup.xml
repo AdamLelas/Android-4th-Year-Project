@@ -7,7 +7,6 @@
     tools:context="com.adam.camerawithsaveapi24.PhotoDisplayActivity">
 
 
-
     <ImageView
         android:id="@+id/photoDisplayView"
         android:layout_width="match_parent"
@@ -24,11 +23,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="2dp"
         android:text=""
         app:layout_constraintEnd_toStartOf="@+id/food_select_button_two"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/photoDisplayView" />
+        app:layout_constraintTop_toBottomOf="@+id/list_ll" />
 
     <Button
         android:id="@+id/food_select_button_two"
@@ -36,34 +35,36 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="2dp"
         android:text=""
         app:layout_constraintEnd_toStartOf="@+id/food_select_button_three"
         app:layout_constraintStart_toEndOf="@+id/food_select_button_one"
-        app:layout_constraintTop_toBottomOf="@+id/photoDisplayView" />
+        app:layout_constraintTop_toBottomOf="@+id/list_ll" />
 
     <Button
         android:id="@+id/food_select_button_three"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="2dp"
         android:text=""
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/food_select_button_two"
-        app:layout_constraintTop_toBottomOf="@+id/photoDisplayView" />
+        app:layout_constraintTop_toBottomOf="@+id/list_ll" />
 
     <Button
         android:id="@+id/food_select_button_none"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_width="181dp"
+        android:layout_height="40dp"
         android:layout_marginEnd="50dp"
         android:layout_marginStart="50dp"
+        android:layout_marginTop="72dp"
+        android:gravity="center"
         android:text="@string/none_of_these"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout3" />
 
     <ProgressBar
         android:id="@+id/photo_display_progress_bar"
@@ -72,16 +73,19 @@
         android:layout_height="30dp"
         android:layout_marginTop="16dp"
         android:indeterminate="true"
+        android:visibility="visible"
         app:layout_constraintEnd_toStartOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/photoDisplayView" />
 
     <!--Parent Linear Layout-->
     <LinearLayout
+        android:id="@+id/linearLayout3"
         android:layout_width="fill_parent"
-        android:layout_height="200dp"
+        android:layout_height="178dp"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/food_select_button_one">
 
@@ -149,8 +153,8 @@
             android:id="@+id/c1_linearLayout3"
             style="@android:style/Widget.Button"
             android:layout_width="fill_parent"
-            android:visibility="gone"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -180,8 +184,8 @@
             style="@android:style/Widget.Button"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
             android:layout_marginTop="8dp"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/food_select_button_one">
@@ -208,8 +212,8 @@
             android:id="@+id/c2_linearLayout2"
             style="@android:style/Widget.Button"
             android:layout_width="fill_parent"
-            android:visibility="gone"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -268,9 +272,9 @@
             android:id="@+id/c3_linearLayout1"
             style="@android:style/Widget.Button"
             android:layout_width="fill_parent"
-            android:visibility="gone"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/food_select_button_one">
@@ -364,6 +368,39 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/photoDisplayView" />
+
+    <LinearLayout
+        android:id="@+id/list_ll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/photoDisplayView">
+
+        <ListView
+            android:id="@+id/selected_items_lv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/photoDisplayView" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/upload_to_firebase_button"
+        android:layout_width="50dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/md_orange_900"
+        android:text="Done"
+        android:visibility="gone"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </android.support.constraint.ConstraintLayout>

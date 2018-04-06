@@ -1,11 +1,15 @@
 package com.adam.camerawithsaveapi24;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
@@ -19,19 +23,22 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 
 import com.adam.camerawithsaveapi24.classes.FoodItem;
 import com.adam.camerawithsaveapi24.tools.AdapterConfirmItemsList;
+import com.adam.camerawithsaveapi24.tools.App;
+import com.adam.camerawithsaveapi24.tools.NutritionSingleton;
 import com.adam.camerawithsaveapi24.tools.Utility;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -39,6 +46,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -52,6 +63,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,7 +81,7 @@ import clarifai2.dto.prediction.Concept;
 import static android.view.View.*;
 import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
-public class PhotoDisplayActivity extends AppCompatActivity implements OnClickListener{
+public class PhotoDisplayActivity extends AppCompatActivity implements OnClickListener {
 
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
@@ -81,11 +93,26 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private static final String TAG = "PhotoDisplayActivity";
     private final int ARRAYSIZE = 5;
 
-
     private String fpath;
     private byte[] imageBytes;
     protected List<Concept> concepts = new ArrayList<>();
     private Button b1, b2, b3;
+    private String milkSelection, sweetenerSelection;
+    private ArrayList<FoodItem> extrasList = new ArrayList<>();
+
+    //radio button dialogs
+    private EditText dialogMilkET;
+    private TextView dialogMilkTV, sugartv, sweettv, honeytv;
+    private int milkAmtML;
+    private double sweetenerAmountTsp;
+    private Button milkbtn, sweetbtn, confMilkBtn,
+            sugarpp, sweetenerpp, honeypp,
+            sugarmm, sweetenermm, honeymm,
+            sweetcancel, sweetconf;
+    private double sweetvalue, honeyvalue, sugarvalue;
+    private boolean otherbool = false;
+    private FoodItem customizedFood = new FoodItem();
+
     private boolean buttonFirstClick = true;
     private Button noneOfThese, uploadButton;
     private ImageView imageView;
@@ -95,16 +122,18 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private String searchedWord = null;
 
     private AdapterConfirmItemsList adapterConfirmItemsList;
-    private ListView selectedItemsListView;
+    private SwipeMenuListView selectedItemsListView;
 
     private LinearLayout confTopBar, confBottomBar;
     private LinearLayout ll_selected_list;
+    private LinearLayout extras_ll;
     private ScrollView confItemScrollViewParent;
     private View includedConfLayout;
     private ImageButton backArrow;
     private ImageButton confConfirmSelection;
     private EditText servingAmount;
     private int servingAmountValue;
+
 
     private TextView confItemName, botCal, botCarb, botFat, botProtein,
             calVal, totFatVal, satFatVal, cholVal, carbVal,
@@ -145,7 +174,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
     private static final String DEBUG_GESTURES_TAG = "Gestures";
     private GestureDetector detector;
-
 
 
     @Override
@@ -300,8 +328,78 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
 //        gestureDetector = new GestureDetector(getActivity())
 
+//        TODO: remove
+        addedExtrasToFirebase();
 
-    }
+
+        SwipeMenuCreator creator = new SwipeMenuCreator() {
+
+            @Override
+            public void create(SwipeMenu menu) {
+                // create "open" item
+                SwipeMenuItem openItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
+                        0xCE)));
+                // set item width
+                openItem.setWidth(170);
+                // set item title
+                openItem.setTitle("Edit");
+                // set item title fontsize
+                openItem.setTitleSize(18);
+                // set item title font color
+                openItem.setTitleColor(Color.WHITE);
+                // add to menu
+                menu.addMenuItem(openItem);
+
+                // create "delete" item
+                SwipeMenuItem deleteItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(170);
+                // set a icon
+                deleteItem.setIcon(R.drawable.ic_delete);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+
+        selectedItemsListView.setMenuCreator(creator);
+
+        selectedItemsListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        System.out.println("Edit");
+                        break;
+                    case 1:
+                        System.out.println("Delete item");
+                        selectedList.remove(index);
+                        updateAdapter();
+                        break;
+                }
+                // false : close the menu; true : not close the menu
+                return false;
+            }
+        });
+
+        extras_ll = findViewById(R.id.add_extras_ll);
+
+        milkbtn = findViewById(R.id.add_milk_btn);
+        milkbtn.setOnClickListener(this);
+        sweetbtn = findViewById(R.id.add_sweet_btn);
+        sweetbtn.setOnClickListener(this);
+
+        honeyvalue = 0;
+        sugarvalue = 0;
+        sweetvalue = 0;
+
+    }//end oncreate
 
 
     @Override
@@ -323,24 +421,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     * MISCELLANEOUS [START]
     */
 
-//    public boolean onTouchEvent(MotionEvent event){
-//        this.detector.onTouchEvent(event);
-//        return super.onTouchEvent(event);
-//    }
-//
-//    class MyGestureListener extends GestureDetector.SimpleOnGestureListener{
-//        private static final String DEBUG_TAG = "Gestures";
-//
-//        @Override
-//        public boolean onDown(MotionEvent event){
-//            return true;
-//        }
-//
-//        @Override
-//        public boolean onFling(){
-//
-//        }
-//    }
 
     protected byte[] getBytesFromFile(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -409,6 +489,22 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("carbs").setValue(item.getCarbs());
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("fiber").setValue(item.getFiber());
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("serving_weight_grams").setValue(item.getServing_weight_grams());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("iron").setValue(item.getIron());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("sugar").setValue(item.getSugar());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("sodium").setValue(item.getSodium());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("calcium").setValue(item.getCalcium());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_a").setValue(item.getVitamin_a());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b1").setValue(item.getVitamin_b1());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b2").setValue(item.getVitamin_b2());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b3").setValue(item.getVitamin_b3());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b5").setValue(item.getVitamin_b5());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b6").setValue(item.getVitamin_b6());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b9").setValue(item.getVitamin_b9());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b12").setValue(item.getVitamin_b12());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_c").setValue(item.getVitamin_c());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_d").setValue(item.getVitamin_d());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_e").setValue(item.getVitamin_e());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_k").setValue(item.getVitamin_k());
 
                 }
 
@@ -453,18 +549,64 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         return jsonObject;
     }
 
-    public void extractPostNutrientsData(JSONObject objIn) {
+    //    probably dont need
+    private void addedExtrasToFirebase() {
+        JSONObject jsonObject = new JSONObject();
+        String queryBody = "sugar and sweetener and honey and milk and 1% milk and 0% milk and soya milk and oat milk and almond milk and lactose free milk";
+        try {
+            jsonObject.put("query", queryBody);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        System.out.println("added extras firebase");
+        extrasNutrients(jsonObject);
+    }
+
+    //    probably dont need
+    private void extrasNutrients(JSONObject jsonObject) {
+        System.out.println("Extrasnutrients start");
+        String url = NUTRITION_NUTRIENTS_URL;
+        String REQUEST_TAG = "Nutrients_POST";
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.POST, url, jsonObject,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.i("PostNutrients", response.toString());
+                        extractExtrasData(response);
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.d(TAG, "Error: " + error.getMessage());
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<>();
+                headers.put("x-app-key", "c030c944f416765d8674debb3322fc2d");
+                headers.put("x-app-id", "7b43b860");
+//                headers.put("x-remote-user-id", "0");
+                return headers;
+            }
+        };
+        NutritionSingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest, REQUEST_TAG);
+    }
+
+    //    probably dont need
+    private void extractExtrasData(JSONObject object) {
+        ArrayList<FoodItem> extrasList = new ArrayList<>();
         JSONArray jsonArray = new JSONArray();
         try {
-            jsonArray = objIn.getJSONArray("foods");
+            jsonArray = object.getJSONArray("foods");
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         for (int i = 0; i < jsonArray.length(); i++) {
-            System.out.println("ExtractPostNutrientsData" + i);
+
             try {
-                System.out.println("ExtractPostNutrientsData inside try" + i);
 
                 JSONObject tempJSONObject = jsonArray.getJSONObject(i);
                 FoodItem tempFoodItem = new FoodItem(
@@ -481,6 +623,195 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                         tempJSONObject.getString("nf_protein"),
                         tempJSONObject.getString("nf_potassium")
                 );
+
+
+                JSONArray tempJArray = tempJSONObject.getJSONArray("full_nutrients");
+
+
+                for (int j = 0; j < tempJArray.length(); j++) {
+                    if (tempJArray.getJSONObject(j).getDouble("attr_id") == 303) {
+                        tempFoodItem.setIron(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 301) {
+                        tempFoodItem.setCalcium(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 320) {
+                        tempFoodItem.setVitamin_a(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 328) {
+                        tempFoodItem.setVitamin_d(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 401) {
+                        tempFoodItem.setVitamin_c(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 415) {
+                        tempFoodItem.setVitamin_b6(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 418) {
+                        tempFoodItem.setVitamin_b12(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 404) {
+                        tempFoodItem.setVitamin_b1(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 405) {
+                        tempFoodItem.setVitamin_b2(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 406) {
+                        tempFoodItem.setVitamin_b3(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 410) {
+                        tempFoodItem.setVitamin_b5(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 417) {
+                        tempFoodItem.setVitamin_b9(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 323) {
+                        tempFoodItem.setVitamin_e(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 430) {
+                        tempFoodItem.setVitamin_k(tempJArray.getJSONObject(j).getDouble("value"));
+                    }
+                }
+                extrasList.add(convertTo1Gram(tempFoodItem));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        sendExtrasToFB(extrasList);
+    }
+
+    //    probably dont need
+    private void sendExtrasToFB(final ArrayList<FoodItem> list) {
+        System.out.println("send extras to fb start");
+        DatabaseReference ref = dbRef.child("common-items");
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    System.out.println("send extras to fb if");
+
+
+                } else {
+                    System.out.println("send extras to fb else");
+
+                    for (FoodItem item : list) {
+                        System.out.println(item.getFood_name());
+                        dbRef.child("common-items").child(item.getFood_name()).child("servings").setValue(item.getServings());
+                        dbRef.child("common-items").child(item.getFood_name()).child("calories").setValue(item.getCalories());
+                        dbRef.child("common-items").child(item.getFood_name()).child("protein").setValue(item.getProtein());
+                        dbRef.child("common-items").child(item.getFood_name()).child("total_fat").setValue(item.getTotal_fat());
+                        dbRef.child("common-items").child(item.getFood_name()).child("saturated_fat").setValue(item.getSaturated_fat());
+                        dbRef.child("common-items").child(item.getFood_name()).child("cholesterol").setValue(item.getCholesterol());
+                        dbRef.child("common-items").child(item.getFood_name()).child("carbs").setValue(item.getCarbs());
+                        dbRef.child("common-items").child(item.getFood_name()).child("fiber").setValue(item.getFiber());
+                        dbRef.child("common-items").child(item.getFood_name()).child("serving_weight_grams").setValue(item.getServing_weight_grams());
+                        dbRef.child("common-items").child(item.getFood_name()).child("iron").setValue(item.getIron());
+                        dbRef.child("common-items").child(item.getFood_name()).child("sugar").setValue(item.getSugar());
+                        dbRef.child("common-items").child(item.getFood_name()).child("sodium").setValue(item.getSodium());
+                        dbRef.child("common-items").child(item.getFood_name()).child("calcium").setValue(item.getCalcium());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_a").setValue(item.getVitamin_a());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_b1").setValue(item.getVitamin_b1());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_b2").setValue(item.getVitamin_b2());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_b3").setValue(item.getVitamin_b3());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_b5").setValue(item.getVitamin_b5());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_b6").setValue(item.getVitamin_b6());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_b9").setValue(item.getVitamin_b9());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_b12").setValue(item.getVitamin_b12());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_c").setValue(item.getVitamin_c());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_d").setValue(item.getVitamin_d());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_e").setValue(item.getVitamin_e());
+                        dbRef.child("common-items").child(item.getFood_name()).child("vitamin_k").setValue(item.getVitamin_k());
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+    }
+
+    //    probably dont need
+    public void extractPostNutrientsData(JSONObject objIn) {
+        JSONArray jsonArray = new JSONArray();
+        try {
+            jsonArray = objIn.getJSONArray("foods");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            try {
+
+                JSONObject tempJSONObject = jsonArray.getJSONObject(i);
+                FoodItem tempFoodItem = new FoodItem(
+                        tempJSONObject.getString("food_name"),
+                        tempJSONObject.getString("serving_weight_grams"),
+                        tempJSONObject.getString("nf_calories"),
+                        tempJSONObject.getString("nf_total_fat"),
+                        tempJSONObject.getString("nf_saturated_fat"),
+                        tempJSONObject.getString("nf_cholesterol"),
+                        tempJSONObject.getString("nf_sodium"),
+                        tempJSONObject.getString("nf_total_carbohydrate"),
+                        tempJSONObject.getString("nf_dietary_fiber"),
+                        tempJSONObject.getString("nf_sugars"),
+                        tempJSONObject.getString("nf_protein"),
+                        tempJSONObject.getString("nf_potassium")
+                );
+
+
+                JSONArray tempJArray = tempJSONObject.getJSONArray("full_nutrients");
+
+
+                for (int j = 0; j < tempJArray.length(); j++) {
+                    if (tempJArray.getJSONObject(j).getDouble("attr_id") == 303) {
+                        tempFoodItem.setIron(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 301) {
+                        tempFoodItem.setCalcium(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 320) {
+                        tempFoodItem.setVitamin_a(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 328) {
+                        tempFoodItem.setVitamin_d(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 401) {
+                        tempFoodItem.setVitamin_c(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 415) {
+                        tempFoodItem.setVitamin_b6(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 418) {
+                        tempFoodItem.setVitamin_b12(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 404) {
+                        tempFoodItem.setVitamin_b1(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 405) {
+                        tempFoodItem.setVitamin_b2(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 406) {
+                        tempFoodItem.setVitamin_b3(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 410) {
+                        tempFoodItem.setVitamin_b5(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 417) {
+                        tempFoodItem.setVitamin_b9(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 323) {
+                        tempFoodItem.setVitamin_e(tempJArray.getJSONObject(j).getDouble("value"));
+
+                    } else if (tempJArray.getJSONObject(j).getDouble("attr_id") == 430) {
+                        tempFoodItem.setVitamin_k(tempJArray.getJSONObject(j).getDouble("value"));
+                    }
+                }
+
                 foodItemsList.add(tempFoodItem);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -576,7 +907,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         String completedGetString = NUTRITION_INSTANT_URL_PREFIX + queryValue + NUTRITION_INSTANT_URL_POSTFIX;
 
         if (queryValue != null) {
-
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(completedGetString, null, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
@@ -673,6 +1003,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
 
     public void showConf() {
+
         includedConfLayout.setVisibility(VISIBLE);
         confBottomBar.setVisibility(VISIBLE);
         confItemScrollViewParent.setVisibility(VISIBLE);
@@ -742,14 +1073,13 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         showConf();
         setConfScreenLocalValues(val);
         setConfScreenTextViews();
-//        TODO: Set all the values in here
     }
 
     /*
     * [END] Layout Modifiers - Show/Hide elements [END]
     */
 
-    //    [START] Layout Modifiers - Edit Text / Images [START] Q
+    //    [START] Layout Modifiers - Edit Text / Images [START]
 
     public void setConfScreenLocalValues(int val) {
         itemNameLocal = (foodItemsList.get(val).getFood_name());
@@ -759,15 +1089,22 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         cholValLocal = (foodItemsList.get(val).getCholesterol());
         carbValLocal = (foodItemsList.get(val).getCarbs());
         fibValLocal = (foodItemsList.get(val).getFiber());
-        sugValLocal = (foodItemsList.get(val).getSugars());
+        sugValLocal = (foodItemsList.get(val).getSugar());
         protValLocal = (foodItemsList.get(val).getProtein());
         potasValLocal = (foodItemsList.get(val).getPotassium());
         servingWeightGramsLocal = (foodItemsList.get(val).getServing_weight_grams());
     }
 
+    private void addExtrasButtons() {
+
+    }
+
     private void setConfScreenTextViews() {
 
-//      TODO: format values to 1 decimal place before setting textBV
+        if (checkForHotDrink(itemNameLocal)) {
+            extras_ll.setVisibility(VISIBLE);
+        }
+
         confItemName.setText(itemNameLocal);
         botCal.setText(String.valueOf(roundSafely((calValLocal * servingAmountValue), 1)));
         botCarb.setText(String.valueOf(roundSafely((carbValLocal * servingAmountValue), 1)));
@@ -783,6 +1120,19 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         protVal.setText(String.valueOf(roundSafely((protValLocal * servingAmountValue), 1)));
         potasVal.setText(String.valueOf(roundSafely((potasValLocal * servingAmountValue), 1)));
 
+
+    }
+
+    private boolean checkForHotDrink(String itemName) {
+        if (itemName.equalsIgnoreCase("coffee")) {
+            return true;
+        } else if (itemName.equalsIgnoreCase("tea")) {
+            return true;
+        } else if (itemName.equalsIgnoreCase("latte")) {
+            return true;
+        } else {
+            return false;
+        }
 
     }
 
@@ -849,11 +1199,188 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                 break;
             default:
         }
+        updateAdapter();
+    }
 
 
+    private void addToSelectedList(FoodItem item) {
+//        FoodItem tempFood = foodItemsList.get(selectValue);
+//        item.setServings(parseServingAmount());
+        selectedList.add(item);
+
+        switch (selectedList.size()) {
+            case 1:
+                setParamsSelectList(list_size1);
+                break;
+            case 2:
+                setParamsSelectList(list_size2);
+                break;
+            case 3:
+                setParamsSelectList(list_size3);
+                break;
+            default:
+        }
+        updateAdapter();
+    }
+
+    private void launchAddSweetDialog() {
+        final Dialog sweetdialog = new Dialog(this);
+        sweetdialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        sweetdialog.setContentView(R.layout.extras_sweet);
+        sugarpp = sweetdialog.findViewById(R.id.sugar_plus);
+        sugarmm = sweetdialog.findViewById(R.id.sugar_minus);
+        sweetenerpp = sweetdialog.findViewById(R.id.sweetener_plus);
+        sweetenermm = sweetdialog.findViewById(R.id.sweetener_minus);
+        honeypp = sweetdialog.findViewById(R.id.honey_plus);
+        honeymm = sweetdialog.findViewById(R.id.honey_minus);
+        sugartv = sweetdialog.findViewById(R.id.sugar_tv);
+        honeytv = sweetdialog.findViewById(R.id.honey_tv);
+        sweettv = sweetdialog.findViewById(R.id.sweetener_tv);
+
+        sugartv.setText(String.valueOf(sugarvalue));
+        honeytv.setText(String.valueOf(honeyvalue));
+        sweettv.setText(String.valueOf(sweetvalue));
+
+        sugarpp.setOnClickListener(this);
+        sugarmm.setOnClickListener(this);
+        sweetenerpp.setOnClickListener(this);
+        sweetenermm.setOnClickListener(this);
+        honeypp.setOnClickListener(this);
+        honeymm.setOnClickListener(this);
+        sweetcancel = sweetdialog.findViewById(R.id.sweet_cancel);
+        sweetconf = sweetdialog.findViewById(R.id.sweet_done);
+        sweetcancel.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sweetdialog.dismiss();
+            }
+        });
+
+        sweetconf.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sweetdialog.dismiss();
+                updateItemName("Sweet");
+            }
+        });
+        sweetdialog.show();
+    }
+
+    private void updateItemName(String incoming) {
+        String n = confItemName.getText().toString();
+        confItemName.setText(n + ", with " + incoming);
+    }
+
+    private void launchAddMilkDialog() {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.extras_milk);
+        confMilkBtn = dialog.findViewById(R.id.confirm_milk);
+        confMilkBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (otherbool) {
+                    milkAmtML = parseIntSafely(dialogMilkET.getText().toString());
+                }
+                updateItemName(milkSelection);
+                dialog.dismiss();
+            }
+        });
+        dialogMilkET = dialog.findViewById(R.id.et_milk_size_other);
+        dialogMilkTV = dialog.findViewById(R.id.tv_milk_size_other);
+        dialog.show();
+    }
+
+    public void onMilkRadioButtonClicked(View view) {
+        // Is the button now checked?
+        boolean checked = ((RadioButton) view).isChecked();
+
+        // Check which radio button was clicked
+        switch (view.getId()) {
+            case R.id.rb_milk_1:
+                if (checked)
+                    milkSelection = "milk";
+                break;
+            case R.id.rb_milk_2:
+                if (checked)
+                    milkSelection = "1% milk";
+                break;
+            case R.id.rb_milk_3:
+                if (checked)
+                    milkSelection = "0% milk";
+                break;
+            case R.id.rb_milk_4:
+                if (checked)
+                    milkSelection = "soya milk";
+                break;
+            case R.id.rb_milk_5:
+                if (checked)
+                    milkSelection = "oat milk";
+                break;
+            case R.id.rb_milk_6:
+                if (checked)
+                    milkSelection = "almond milk";
+                break;
+            case R.id.rb_milk_7:
+                if (checked)
+                    milkSelection = "lactose free milk";
+                break;
+        }
+    }
+
+    private void showMilkDialogET() {
+        dialogMilkET.setVisibility(VISIBLE);
+        dialogMilkTV.setVisibility(VISIBLE);
+    }
+
+    private void hideMilkDialogET() {
+        dialogMilkET.setVisibility(GONE);
+        dialogMilkTV.setVisibility(GONE);
+    }
+
+    public void onMilkAmtRadioButtonClicked(View view) {
+        // Is the button now checked?
+        boolean checked = ((RadioButton) view).isChecked();
+
+        // Check which radio button was clicked
+        switch (view.getId()) {
+            case R.id.rb_milk_size_1:
+                if (checked) {
+                    milkAmtML = 12;
+                    System.out.println(milkAmtML);
+                    otherbool = false;
+                    hideMilkDialogET();
+                }
+                break;
+            case R.id.rb_milk_size_2:
+                if (checked) {
+                    milkAmtML = 30;
+                    System.out.println(milkAmtML);
+                    otherbool = false;
+                    hideMilkDialogET();
+                }
+                break;
+            case R.id.rb_milk_size_3:
+                if (checked) {
+                    milkAmtML = 12;
+                    otherbool = false;
+                    System.out.println(milkAmtML);
+
+                    hideMilkDialogET();
+                }
+                break;
+            case R.id.rb_milk_size_other:
+                if (checked) {
+                    showMilkDialogET();
+                    otherbool = true;
+                }
+                break;
+        }
+    }
+
+    private void updateAdapter() {
         adapterConfirmItemsList = new AdapterConfirmItemsList(this, 0, selectedList);
         selectedItemsListView.setAdapter(adapterConfirmItemsList);
-
     }
 
     private void afterTypedSearch(String searchTerm) {
@@ -888,6 +1415,68 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         });
 
         searchDialog.show();
+    }
+
+    private void setLocalValuesForExtras(ArrayList<FoodItem> list) {
+//        TODO: FINISH THIS
+    }
+
+    /**
+     * sugar, sweetener, honey, milkml, milkname
+     */
+    private void customizedDrink(final double sug, final double swtner, final double hny, final double milkml, final String milkname) {
+
+        DatabaseReference extrasRef = dbRef.child("common-items");
+
+        extrasRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    ArrayList<FoodItem> tempList = new ArrayList<>();
+
+                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                        FoodItem tFood = ds.getValue(FoodItem.class);
+                        tFood.setFood_name(ds.getKey());
+                        tempList.add(tFood);
+                    }
+//                    setLocalValuesForExtras(tempList);
+                    FoodItem temp = foodItemsList.get(selectValue);
+
+                    for (FoodItem i : tempList) {
+                        System.out.println("customizedDrink: ");
+                        System.out.println(i);
+                        if (i.getFood_name().equalsIgnoreCase("sugar") && sug != 0) {
+//                            i.setServings(sug);
+                            System.out.println("INSIDE SUGAR IF");
+                            System.out.println(convertToXGrams(i, (sug * 5)));
+                            temp = combineFoodItems(temp, convertToXGrams(i, (sug * 5)));
+                            System.out.println(temp.getSugar());
+                        }
+                        if (i.getFood_name().equalsIgnoreCase("sweetener") && swtner != 0) {
+//                            i.setServings(swtner);
+                            temp = combineFoodItems(temp, convertToXGrams(i, (swtner * 5)));
+                        }
+                        if (i.getFood_name().equalsIgnoreCase("honey") && hny != 0) {
+//                            i.setServings(hny);
+                            System.out.println(convertToXGrams(i, (hny * 5)));
+                            temp = combineFoodItems(temp, convertToXGrams(i, (hny * 5)));
+                        }
+                        if (i.getFood_name().equalsIgnoreCase(milkname) && milkml != 0) {
+//                            i.setServings(1);
+                            temp = combineFoodItems(temp, convertToXGrams(i, milkml));
+                        }
+                    }
+                    dbRef.child("users").child(user.getUid()).child("user-items").child("your-" + temp.getFood_name()).setValue(temp);
+                    customizedFood = temp;
+                    addToSelectedList(customizedFood);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
 
@@ -954,19 +1543,55 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             showAllAfterConf();
 
         } else if (i == confConfirmSelection.getId()) {
-            addToSelectedList();
             showAllAfterConf();
+            if (milkAmtML != 0 || sweetvalue != 0 || sugarvalue != 0 || honeyvalue != 0) {
+                customizedDrink(sugarvalue, sweetvalue, honeyvalue, milkAmtML, milkSelection);
+            } else {
+                addToSelectedList();
+            }
+            milkAmtML = 0;
+            sweetvalue = 0;
+            sugarvalue = 0;
+            honeyvalue = 0;
+
         } else if (i == uploadButton.getId()) {
             for (FoodItem item : selectedList) {
-
                 sendDataToDataBase(item);
-
-
             }
-
+        } else if (i == milkbtn.getId()) {
+            launchAddMilkDialog();
+        } else if (i == sweetbtn.getId()) {
+            launchAddSweetDialog();
+        } else if (i == sweetenermm.getId()) {
+            if (!(sweetvalue < 1)) {
+                sweetvalue--;
+                sweettv.setText(String.valueOf(sweetvalue));
+            }
+        } else if (i == sweetenerpp.getId()) {
+            sweetvalue++;
+            sweettv.setText(String.valueOf(sweetvalue));
+        } else if (i == sugarpp.getId()) {
+            sugarvalue++;
+            sugartv.setText(String.valueOf(sugarvalue));
+        } else if (i == sugarmm.getId()) {
+            if (!(sugarvalue < 1)) {
+                sugarvalue--;
+                sugartv.setText(String.valueOf(sugarvalue));
+            }
+        } else if (i == honeypp.getId()) {
+            honeyvalue++;
+            honeytv.setText(String.valueOf(honeyvalue));
+        } else if (i == honeymm.getId()) {
+            if (!(honeyvalue < 1)) {
+                honeyvalue--;
+                honeytv.setText(String.valueOf(honeyvalue));
+            }
+        } else if (i == sweetconf.getId()) {
+//            customizedDrink(itemNameLocal, sugarvalue, sweetvalue, honeyvalue);
 
         }
 
+    }//onclick end
 
-    }
+
 }

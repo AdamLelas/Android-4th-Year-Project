@@ -378,7 +378,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/photoDisplayView">
 
-        <ListView
+        <com.baoyz.swipemenulistview.SwipeMenuListView
             android:id="@+id/selected_items_lv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

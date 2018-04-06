@@ -1,18 +1,24 @@
 package com.adam.camerawithsaveapi24;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -30,6 +37,11 @@ import android.widget.Toast;
 import com.adam.camerawithsaveapi24.classes.FoodItem;
 import com.adam.camerawithsaveapi24.classes.UserDetails;
 import com.adam.camerawithsaveapi24.tools.AdapterLogList;
+import com.adam.camerawithsaveapi24.tools.AdapterQuickList;
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -37,6 +49,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -73,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private ProgressBar calPB;
 
     private final int places = 0;
+    private ArrayList<FoodItem> quickListArray = new ArrayList();
 
 
     private double dailyCarb, dailyCal, dailyChol, dailyFib, dailyPro, dailySatFat, dailyTotFat, calRec;
@@ -82,6 +97,9 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private ImageView dateminus, dateplus;
     private View includeLayout;
 
+    private SwipeMenuListView quickListView;
+    private SwipeMenuCreator creator;
+
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -89,58 +107,47 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
+
+                case R.id.navigation_more_info:
+
+                    if (mAuth.getCurrentUser() != null) {
+                        Intent moreInfoIntent = new Intent(MainActivity.this, MoreInformationActivity.class);
+                        startActivity(moreInfoIntent);
+                    } else {
+                        dispatchSignInIntent();
+                    }
+
                 case R.id.navigation_home:
 
                     return true;
 
                 case R.id.navigation_account_settings:
-                    findViewById(R.id.navigation_account_settings).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (mAuth.getCurrentUser() == null) {
-                                dispatchSignInIntent();
-                            } else {
-                                dispatchSignOutIntent();
-                            }
-                        }
-                    });
+
+                    if (mAuth.getCurrentUser() == null) {
+                        dispatchSignInIntent();
+                    } else {
+                        dispatchSignOutIntent();
+                    }
+
                     return true;
 
                 case R.id.navigation_camera:
-                    findViewById(R.id.navigation_camera).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                                dispatchTakePictureIntent();
-                            } else {
-                                if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-                                    Toast.makeText(getApplicationContext(), "Permission Needed.", Toast.LENGTH_LONG).show();
-                                }
-                                requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_IMAGE_CAPTURE);
-                            }
+
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                        dispatchTakePictureIntent();
+                    } else {
+                        if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                            Toast.makeText(getApplicationContext(), "Permission Needed.", Toast.LENGTH_LONG).show();
                         }
-                    });
+                        requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_IMAGE_CAPTURE);
+                    }
                     return true;
+                case R.id.navigation_add_more:
+                    launchAddMoreDialog();
             }
             return false;
         }
     };
-
-    protected void dispatchSignInIntent() {
-        Intent signInIntent = new Intent(this, SignInActivity.class);
-        startActivity(signInIntent);
-    }
-
-    protected void dispatchSignOutIntent() {
-        Intent signOutIntent = new Intent(this, AccountManagementActivity.class);
-        startActivity(signOutIntent);
-    }
-
-    private void dispatchSignUpIntent() {
-        Intent signUpIntent = new Intent(this, SignUpActivity.class);
-        startActivity(signUpIntent);
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -191,7 +198,196 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+         creator = new SwipeMenuCreator() {
+
+            @Override
+            public void create(SwipeMenu menu) {
+                // create "open" item
+                SwipeMenuItem openItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                openItem.setBackground(new ColorDrawable(Color.rgb(0x66, 0xff,0x33)));
+                // set item width
+                openItem.setWidth(170);
+                openItem.setIcon(R.drawable.ic_tick);
+                // add to menu
+                menu.addMenuItem(openItem);
+            }
+        };
+
+
+
     }
+
+    private void launchQuickAddDialog() {
+        final Dialog quickDialog = new Dialog(this);
+        quickDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        quickDialog.setContentView(R.layout.quickadd_dialog);
+
+        quickListView = quickDialog.findViewById(R.id.quick_list_lv);
+        final TextView tv = quickDialog.findViewById(R.id.empty_list_tv);
+
+
+
+
+        quickListView.setMenuCreator(creator);
+        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("user-items");
+        child.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+
+//                    populate quicklist
+
+                    quickListArray.clear();
+                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                        FoodItem foodItem = ds.getValue(FoodItem.class);
+                        foodItem.setFood_name(ds.getKey());
+                        System.out.println(foodItem);
+                        quickListArray.add(foodItem);
+                        AdapterQuickList adapterQuickList = new AdapterQuickList(MainActivity.this, 0, quickListArray);
+                        quickListView.setAdapter(adapterQuickList);
+                    }
+
+
+//                    AdapterQuickList adapterQuickList = new AdapterQuickList(MainActivity.this, 0, quickListArray);
+//                    quickListView.setAdapter(adapterQuickList);
+
+                    quickListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                            switch (index) {
+                                case 0:
+                                    System.out.println("Add to fb");
+                                    sendDataToFB(quickListArray.get(position));
+//                                    quickDialog.dismiss();
+                                    itemAddedDialog();
+                                    break;
+                            }
+                            return false;
+                        }
+                    });
+
+
+                } else {
+                    tv.setVisibility(VISIBLE);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        quickDialog.show();
+    }
+
+    private void itemAddedDialog(){
+        AlertDialog.Builder itemAddedDialog = new AlertDialog.Builder(this);
+//        final TextView et = new TextView(this);
+        itemAddedDialog.setMessage("Item added");
+        itemAddedDialog.show();
+    }
+
+    private void sendDataToFB(final FoodItem item) {
+        System.out.println(item);
+        final String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name());
+
+        child.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    FoodItem tFood = (dataSnapshot.getValue(FoodItem.class));
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("servings").setValue(tFood.getServings() + 1);
+                } else {
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).setValue(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    private void launchAddMoreDialog() {
+        final Dialog addMoreDialog = new Dialog(this);
+        addMoreDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        addMoreDialog.setContentView(R.layout.add_more_dialog);
+        Button typed = addMoreDialog.findViewById(R.id.add_more_typed);
+        Button quick = addMoreDialog.findViewById(R.id.add_more_quick);
+        quick.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchQuickAddDialog();
+                addMoreDialog.dismiss();
+            }
+        });
+        typed.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchTypedSearchDialog();
+                addMoreDialog.dismiss();
+            }
+        });
+
+        addMoreDialog.show();
+    }
+
+    private void afterTypedSearch(String searchTerm) {
+        Intent intent = new Intent(this, PhotoDisplayActivity.class);
+        intent.putExtra("searchTerm", searchTerm);
+        startActivity(intent);
+    }
+
+    private void launchTypedSearchDialog() {
+        AlertDialog.Builder searchDialog = new AlertDialog.Builder(this);
+        final EditText et = new EditText(this);
+        searchDialog.setMessage("Type the name of each item");
+//        searchDialog.setTitle("Title");
+
+        searchDialog.setView(et);
+
+        searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String et_value = et.getText().toString();
+                afterTypedSearch(et_value);
+            }
+        });
+
+        searchDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent runaway = new Intent(MainActivity.this, MainActivity.class);
+                startActivity(runaway);
+            }
+        });
+
+        searchDialog.show();
+    }
+
+
+    protected void dispatchSignInIntent() {
+        Intent signInIntent = new Intent(this, SignInActivity.class);
+        startActivity(signInIntent);
+    }
+
+    protected void dispatchSignOutIntent() {
+        Intent signOutIntent = new Intent(this, AccountManagementActivity.class);
+        startActivity(signOutIntent);
+    }
+
+    private void dispatchSignUpIntent() {
+        Intent signUpIntent = new Intent(this, SignUpActivity.class);
+        startActivity(signUpIntent);
+    }
+
 
     @Override
     protected void onStart() {
@@ -271,7 +467,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private void updateUI() {
         tvDate.setText(timevalue);
         tvConsVal.setText(String.valueOf(roundSafely(dailyCal, places)));
-        tvCalRem.setText(String.valueOf(roundSafely((calRec - dailyCal),places)));
+        tvCalRem.setText(String.valueOf(roundSafely((calRec - dailyCal), places)));
         tvBudgetVal.setText(String.valueOf(roundSafely(calRec, places)));
     }
 
