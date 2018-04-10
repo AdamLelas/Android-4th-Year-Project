@@ -84,6 +84,7 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
     private void redirectToMain() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
+        finish();
     }
 
 
@@ -103,9 +104,10 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
     }
 
     private void extractUserDetails(DataSnapshot ds) {
-        userDetails = ds.getValue(UserDetails.class);
-
         try {
+            userDetails = ds.getValue(UserDetails.class);
+
+
             height.setText(String.valueOf((userDetails.getHeight())));
             weight.setText(String.valueOf((userDetails.getWeight())));
             age.setText(String.valueOf((userDetails.getAge())));
@@ -120,7 +122,6 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
             e.printStackTrace();
         }
     }
-
 
 
     private void saveUpdate() {
@@ -142,12 +143,58 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
     public void onClick(View v) {
         int i = v.getId();
         if (i == cancel.getId()) {
-            Intent botnav = new Intent(this, MainActivity.class);
-            startActivity(botnav);
+            if (height.getText().toString().trim().equalsIgnoreCase("")) {
+                height.setError("Height is required.");
+            } else if (weight.getText().toString().trim().equalsIgnoreCase("")) {
+                weight.setError("Weight is required.");
+
+            } else if (age.getText().toString().trim().equalsIgnoreCase("")) {
+                age.setError("Age is required.");
+
+            } else if (goal.getText().toString().trim().equalsIgnoreCase("")) {
+                goal.setError("Goal is required.");
+            } else {
+                if (parseDoubleSafely(height.getText().toString()) < 60 || parseDoubleSafely(height.getText().toString()) > 300) {
+                    height.setError("Range: 60cm - 300cm");
+                } else if (parseDoubleSafely(weight.getText().toString()) < 2 || parseDoubleSafely(weight.getText().toString()) > 300) {
+                    weight.setError("Range: 2kg - 300kg");
+                } else if (parseDoubleSafely(age.getText().toString()) < 5 || parseDoubleSafely(age.getText().toString()) > 100) {
+                    age.setError("Range: 5 - 100");
+                } else if (parseDoubleSafely(goal.getText().toString()) < 2 || parseDoubleSafely(goal.getText().toString()) > 300) {
+                    goal.setError("Range: 2kg - 300kg");
+                } else {
+                    redirectToMain();
+                }
+
+            }
         } else if (i == save.getId()) {
-            saveUpdate();
+            if (height.getText().toString().trim().equalsIgnoreCase("")) {
+                height.setError("Height is required.");
+            } else if (weight.getText().toString().trim().equalsIgnoreCase("")) {
+                weight.setError("Weight is required.");
+
+            } else if (age.getText().toString().trim().equalsIgnoreCase("")) {
+                age.setError("Age is required.");
+
+            } else if (goal.getText().toString().trim().equalsIgnoreCase("")) {
+                goal.setError("Goal is required.");
+            } else {
+                if (parseDoubleSafely(height.getText().toString()) < 60 || parseDoubleSafely(height.getText().toString()) > 300) {
+                    height.setError("Range: 60cm - 300cm");
+                } else if (parseDoubleSafely(weight.getText().toString()) < 2 || parseDoubleSafely(weight.getText().toString()) > 300) {
+                    weight.setError("Range: 2kg - 300kg");
+                } else if (parseDoubleSafely(age.getText().toString()) < 5 || parseDoubleSafely(age.getText().toString()) > 100) {
+                    age.setError("Range: 5 - 100");
+                } else if (parseDoubleSafely(goal.getText().toString()) < 2 || parseDoubleSafely(goal.getText().toString()) > 300) {
+                    goal.setError("Range: 2kg - 300kg");
+                } else {
+                    saveUpdate();
+                    redirectToMain();
+                }
+            }
+
+
         }
-        redirectToMain();
     }
 }
 

@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.adam.camerawithsaveapi24.classes.UserDetails;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -62,7 +63,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         findViewById(R.id.already_registered_tv).setOnClickListener(this);
 
         // Buttons
-        findViewById(R.id.sign_up_button).setOnClickListener(this);
+        findViewById(R.id.sign_up_btn).setOnClickListener(this);
         findViewById(R.id.google_sign_up_button).setOnClickListener(this);
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -109,7 +110,9 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "CreateUserEmail:success");
-                            redirectToBase();
+//                            redirectToBase();
+                            Intent goDetails = new Intent(SignUpActivity.this, UserDetailsActivity.class);
+                            startActivity(goDetails);
                         } else {
                             Log.w(TAG, "createUserEmail:failure", task.getException());
                             Toast.makeText(SignUpActivity.this, "Auth failed",
@@ -118,6 +121,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                         hideProgressBar();
                     }
                 });
+
     }
 
     private void redirectToBase(){
@@ -128,7 +132,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     private void showProgressBar() {
         findViewById(R.id.sign_up_progress_bar).setVisibility(VISIBLE);
         findViewById(R.id.google_sign_up_button).setVisibility(GONE);
-        findViewById(R.id.sign_up_button).setVisibility(GONE);
+        findViewById(R.id.sign_up_btn).setVisibility(GONE);
         findViewById(R.id.already_registered_tv).setVisibility(GONE);
         findViewById(R.id.skip_for_now_tv).setVisibility(GONE);
     }
@@ -136,15 +140,13 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     private void hideProgressBar() {
         findViewById(R.id.sign_up_progress_bar).setVisibility(GONE);
         findViewById(R.id.google_sign_up_button).setVisibility(VISIBLE);
-        findViewById(R.id.sign_up_button).setVisibility(VISIBLE);
+        findViewById(R.id.sign_up_btn).setVisibility(VISIBLE);
         findViewById(R.id.already_registered_tv).setVisibility(VISIBLE);
         findViewById(R.id.skip_for_now_tv).setVisibility(VISIBLE);
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
-
-//      TODO: showProgressBar();
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -155,6 +157,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
+
 //                            updateUI(user);
                         } else {
                             // If sign in fails, display a message to the user.
@@ -177,7 +180,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
     @Override
     public void onClick(View v) {
         int i = v.getId();
-        if (i == R.id.sign_up_button) {
+        if (i == R.id.sign_up_btn) {
             createAccount(editTextEmail.getText().toString().trim(), editTextPassword.getText().toString().trim());
         } else if (i == R.id.google_sign_up_button) {
 //TODO: google sign in
@@ -187,9 +190,11 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 //TODO: Anonymous sign in?
             Intent skipForNowIntent = new Intent(this, MainActivity.class);
             startActivity(skipForNowIntent);
+            finish();
         } else if (i == R.id.already_registered_tv){
             Intent registeredAlreadyIntent = new Intent (this, SignInActivity.class);
             startActivity(registeredAlreadyIntent);
+            finish();
         }
 
 

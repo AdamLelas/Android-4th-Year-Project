@@ -1,8 +1,7 @@
-package com.adam.camerawithsaveapi24;
+package com.adam.camerawithsaveapi24.tools;
 
 import android.app.Application;
 import android.content.Context;
-import android.annotation.SuppressLint;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;

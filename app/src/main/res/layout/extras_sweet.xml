@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/linearLayout6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Add teaspoon amounts (5g)" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout7"
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout6">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            tools:layout_editor_absoluteX="91dp"
+            tools:layout_editor_absoluteY="166dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2.5"
+                android:gravity="center"
+                android:paddingEnd="5dp"
+                android:text="Sugar" />
+
+            <Button
+                android:id="@+id/sugar_plus"
+                style="@android:style/Widget.Material.Light.Button.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:text="+"
+                tools:layout_editor_absoluteX="145dp"
+                tools:layout_editor_absoluteY="153dp" />
+
+            <TextView
+                android:id="@+id/sugar_tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="0"
+                android:textSize="20dp"
+                app:layout_constraintEnd_toStartOf="@+id/button5"
+                app:layout_constraintHorizontal_bias="0.75"
+                app:layout_constraintStart_toEndOf="@+id/button4"
+                tools:layout_editor_absoluteY="161dp" />
+
+            <Button
+                android:id="@+id/sugar_minus"
+                style="@android:style/Widget.Material.Light.Button.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:text="-"
+                tools:layout_editor_absoluteX="240dp"
+                tools:layout_editor_absoluteY="153dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            tools:layout_editor_absoluteX="91dp"
+            tools:layout_editor_absoluteY="166dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2.5"
+                android:gravity="center"
+                android:paddingEnd="5dp"
+                android:text="Sweetener" />
+
+            <Button
+                android:id="@+id/sweetener_plus"
+                style="@android:style/Widget.Material.Light.Button.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:text="+"
+                tools:layout_editor_absoluteX="145dp"
+                tools:layout_editor_absoluteY="153dp" />
+
+            <TextView
+                android:id="@+id/sweetener_tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="0"
+                android:textSize="20dp"
+                app:layout_constraintEnd_toStartOf="@+id/button5"
+                app:layout_constraintHorizontal_bias="0.75"
+                app:layout_constraintStart_toEndOf="@+id/button4"
+                tools:layout_editor_absoluteY="161dp" />
+
+            <Button
+                android:id="@+id/sweetener_minus"
+                style="@android:style/Widget.Material.Light.Button.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:text="-"
+                tools:layout_editor_absoluteX="240dp"
+                tools:layout_editor_absoluteY="153dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            tools:layout_editor_absoluteX="91dp"
+            tools:layout_editor_absoluteY="166dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2.5"
+                android:gravity="center"
+                android:paddingEnd="5dp"
+                android:text="Honey" />
+
+            <Button
+                android:id="@+id/honey_plus"
+                style="@android:style/Widget.Material.Light.Button.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:text="+"
+                tools:layout_editor_absoluteX="145dp"
+                tools:layout_editor_absoluteY="153dp" />
+
+            <TextView
+                android:id="@+id/honey_tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="0"
+                android:textSize="20dp"
+                app:layout_constraintEnd_toStartOf="@+id/button5"
+                app:layout_constraintHorizontal_bias="0.75"
+                app:layout_constraintStart_toEndOf="@+id/button4"
+                tools:layout_editor_absoluteY="161dp" />
+
+            <Button
+                android:id="@+id/honey_minus"
+                style="@android:style/Widget.Material.Light.Button.Small"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:text="-"
+                tools:layout_editor_absoluteX="240dp"
+                tools:layout_editor_absoluteY="153dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/sweet_done"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="Done"
+        app:layout_constraintEnd_toStartOf="@+id/sweet_cancel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout7" />
+
+    <Button
+        android:id="@+id/sweet_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="Cancel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/sweet_done"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout7" />
+
+</android.support.constraint.ConstraintLayout>

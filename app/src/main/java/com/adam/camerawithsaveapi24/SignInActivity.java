@@ -120,18 +120,18 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
                 });
     }
 
-    private void displayBase(){
+    private void displayBase() {
         Intent displayBaseIntent = new Intent(this, MainActivity.class);
         startActivity(displayBaseIntent);
     }
 
-    private void showProgressBar(){
+    private void showProgressBar() {
         findViewById(R.id.sign_in_progress_bar).setVisibility(VISIBLE);
         findViewById(R.id.google_sign_in_button).setVisibility(GONE);
         findViewById(R.id.email_sign_in_button).setVisibility(GONE);
     }
 
-    private void hideProgressBar(){
+    private void hideProgressBar() {
         findViewById(R.id.sign_in_progress_bar).setVisibility(GONE);
         findViewById(R.id.google_sign_in_button).setVisibility(VISIBLE);
         findViewById(R.id.email_sign_in_button).setVisibility(VISIBLE);
@@ -217,7 +217,6 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(View v) {
         int i = v.getId();
         if (i == R.id.tvSkipForNowSI) {
-//            TODO: anonymous sign in?
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
         } else if (i == R.id.email_sign_in_button) {
