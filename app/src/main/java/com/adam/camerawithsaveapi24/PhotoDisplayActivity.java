@@ -67,7 +67,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -136,6 +135,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private ScrollView confItemScrollViewParent;
     private View includedConfLayout;
     private ImageButton backArrow;
+    private ImageView backToMainArrow;
     private ImageButton confConfirmSelection;
     private EditText servingAmount;
     private int servingAmountValue;
@@ -196,8 +196,11 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         database = FirebaseDatabase.getInstance();
         dbRef = database.getReference();
         user = mAuth.getCurrentUser();
-        storage =  FirebaseStorage.getInstance();
+        storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference();
+
+        backToMainArrow = findViewById(R.id.back_arrow_pda_iv);
+        backToMainArrow.setOnClickListener(this);
 
         //Set up views findViewById
         imageView = findViewById(R.id.photoDisplayView);
@@ -360,19 +363,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                 // create "open" item
                 SwipeMenuItem openItem = new SwipeMenuItem(
                         getApplicationContext());
-                // set item background
-                openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
-                        0xCE)));
-                // set item width
-                openItem.setWidth(170);
-                // set item title
-                openItem.setTitle("Edit");
-                // set item title fontsize
-                openItem.setTitleSize(18);
-                // set item title font color
-                openItem.setTitleColor(Color.WHITE);
-                // add to menu
-                menu.addMenuItem(openItem);
 
                 // create "delete" item
                 SwipeMenuItem deleteItem = new SwipeMenuItem(
@@ -396,11 +386,8 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
                 switch (index) {
                     case 0:
-                        System.out.println("Edit");
-                        break;
-                    case 1:
                         System.out.println("Delete item");
-                        selectedList.remove(index);
+                        selectedList.remove(position);
                         updateAdapter();
                         break;
                 }
@@ -467,7 +454,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     * FIREBASE [START]
     */
     public void sendDataToDataBase(final FoodItem item) {
-        final String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
+        final String timeNow = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
 //        String hoursNow = new SimpleDateFormat("HH").format(new Date());
 //        final int hoursNowInt = Integer.parseInt(hoursNow);
 //        final String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
@@ -486,7 +473,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 //        }
 
 
-        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name());
+        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name());
 
         child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -497,35 +484,37 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     System.out.println("onDataChange: IF");
                     System.out.println(dataSnapshot.getValue());
                     FoodItem tFood = (dataSnapshot.getValue(FoodItem.class));
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("servings").setValue(tFood.getServings() + servingAmountValue);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("servings").setValue(tFood.getServings() + servingAmountValue);
                 } else {
                     System.out.println("onDataChange: ELSE");
 
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("servings").setValue(item.getServings());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("calories").setValue(item.getCalories());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("protein").setValue(item.getProtein());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("total_fat").setValue(item.getTotal_fat());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("saturated_fat").setValue(item.getSaturated_fat());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("cholesterol").setValue(item.getCholesterol());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("carbs").setValue(item.getCarbs());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("fiber").setValue(item.getFiber());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("serving_weight_grams").setValue(item.getServing_weight_grams());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("iron").setValue(item.getIron());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("sugar").setValue(item.getSugar());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("sodium").setValue(item.getSodium());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("calcium").setValue(item.getCalcium());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_a").setValue(item.getVitamin_a());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b1").setValue(item.getVitamin_b1());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b2").setValue(item.getVitamin_b2());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b3").setValue(item.getVitamin_b3());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b5").setValue(item.getVitamin_b5());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b6").setValue(item.getVitamin_b6());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b9").setValue(item.getVitamin_b9());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_b12").setValue(item.getVitamin_b12());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_c").setValue(item.getVitamin_c());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_d").setValue(item.getVitamin_d());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_e").setValue(item.getVitamin_e());
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("vitamin_k").setValue(item.getVitamin_k());
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).setValue(item);
+
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("servings").setValue(item.getServings());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("calories").setValue(item.getCalories());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("protein").setValue(item.getProtein());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("total_fat").setValue(item.getTotal_fat());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("saturated_fat").setValue(item.getSaturated_fat());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("cholesterol").setValue(item.getCholesterol());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("carbs").setValue(item.getCarbs());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("fiber").setValue(item.getFiber());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("serving_weight_grams").setValue(item.getServing_weight_grams());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("iron").setValue(item.getIron());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("sugar").setValue(item.getSugar());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("sodium").setValue(item.getSodium());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("calcium").setValue(item.getCalcium());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_a").setValue(item.getVitamin_a());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b1").setValue(item.getVitamin_b1());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b2").setValue(item.getVitamin_b2());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b3").setValue(item.getVitamin_b3());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b5").setValue(item.getVitamin_b5());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b6").setValue(item.getVitamin_b6());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b9").setValue(item.getVitamin_b9());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b12").setValue(item.getVitamin_b12());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_c").setValue(item.getVitamin_c());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_d").setValue(item.getVitamin_d());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_e").setValue(item.getVitamin_e());
+//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_k").setValue(item.getVitamin_k());
 
                 }
 
@@ -539,6 +528,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 //        }
         Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
         startActivity(finished);
+        finish();
     }
 
     /*
@@ -573,7 +563,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     //    probably dont need
     private void addedExtrasToFirebase() {
         JSONObject jsonObject = new JSONObject();
-        String queryBody = "sugar and sweetener and honey and milk and 1% milk and 0% milk and soya milk and oat milk and almond milk and lactose free milk";
+        String queryBody = "sugar and sweetener and honey and milk and 1% milk and 0% milk and soya milk and oat milk and almond milk and lactose free milk and water";
         try {
             jsonObject.put("query", queryBody);
         } catch (JSONException e) {
@@ -1609,12 +1599,31 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                 honeyvalue--;
                 honeytv.setText(String.valueOf(honeyvalue));
             }
-        } else if (i == sweetconf.getId()) {
-//            customizedDrink(itemNameLocal, sugarvalue, sweetvalue, honeyvalue);
-
+        } else if (i == backToMainArrow.getId() ) {
+            Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
+            startActivity(finished);
+            finish();
         }
 
     }//onclick end
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

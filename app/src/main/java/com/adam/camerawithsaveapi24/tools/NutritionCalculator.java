@@ -29,7 +29,7 @@ public class NutritionCalculator {
     /**
      * Use Metric units only
      **/
-    public static double CalcHarrisBenedictBMRMetric(String gender, double height, double weight, int age, String activityLevel) {
+    public static double CalcHarrisBenedictBMRMetric(String gender, double height, double weight, int age, String activityLevel, double goal) {
         double retVal = 0;
 
         if (gender.equalsIgnoreCase("male")) {
@@ -44,6 +44,10 @@ public class NutritionCalculator {
             retVal = retVal * 1.76;
         } else if (activityLevel.equalsIgnoreCase("extremely")) {
             retVal = retVal * 2.25;
+        }
+
+        if (goal > weight) {
+            retVal = (retVal - (retVal * 0.15));
         }
 
         return retVal;
@@ -151,12 +155,12 @@ public class NutritionCalculator {
     public static double CalcRecommendedPercentVitaminA(int age, String gender) {
         if (age < 14) {
             return 600;
-        } else  {
-            if(gender.equalsIgnoreCase("male")){
+        } else {
+            if (gender.equalsIgnoreCase("male")) {
 
 
-           return 900;
-            }else{
+                return 900;
+            } else {
                 return 700;
             }
         }
@@ -168,7 +172,7 @@ public class NutritionCalculator {
     public static double CalcRecommendedPercentVitaminB1(String gender) {
         if (gender.equalsIgnoreCase("male")) {
             return 1200;
-        } else  {
+        } else {
             return 1100;
         }
     }
@@ -179,7 +183,7 @@ public class NutritionCalculator {
     public static double CalcRecommendedPercentVitaminB2(String gender) {
         if (gender.equalsIgnoreCase("male")) {
             return 1300;
-        } else  {
+        } else {
             return 1100;
         }
     }
@@ -190,7 +194,7 @@ public class NutritionCalculator {
     public static double CalcRecommendedPercentVitaminB3(String gender) {
         if (gender.equalsIgnoreCase("male")) {
             return 16;
-        } else  {
+        } else {
             return 14;
         }
     }
@@ -208,14 +212,12 @@ public class NutritionCalculator {
      * returns value in mg
      */
     public static double CalcRecommendedPercentVitaminB6(int age, String gender) {
-        if (age < 50){
+        if (age < 50) {
             return 1.3;
-        }
-        else{
-            if(gender.equalsIgnoreCase("male")){
+        } else {
+            if (gender.equalsIgnoreCase("male")) {
                 return 1.7;
-            }
-            else {
+            } else {
                 return 1.5;
             }
         }
@@ -234,7 +236,7 @@ public class NutritionCalculator {
      * returns value in micrograms
      */
     public static double CalcRecommendedPercentVitaminB12() {
-       return 2.4;
+        return 2.4;
     }
 
     /**
@@ -243,7 +245,7 @@ public class NutritionCalculator {
     public static double CalcRecommendedPercentVitaminC(String gender) {
         if (gender.equalsIgnoreCase("male")) {
             return 90;
-        } else  {
+        } else {
             return 75;
         }
     }
@@ -253,7 +255,7 @@ public class NutritionCalculator {
      * returns value in mg
      */
     public static double CalcRecommendedPercentVitaminE() {
-       return 15;
+        return 15;
     }
 
     /**
@@ -262,7 +264,7 @@ public class NutritionCalculator {
     public static double CalcRecommendedPercentVitaminK(String gender) {
         if (gender.equalsIgnoreCase("male")) {
             return 120;
-        } else  {
+        } else {
             return 90;
         }
     }
@@ -274,7 +276,7 @@ public class NutritionCalculator {
     public static double CalcRecommendedPercentVitaminD(int age) {
         if (age < 70) {
             return 15;
-        } else  {
+        } else {
             return 20;
         }
     }

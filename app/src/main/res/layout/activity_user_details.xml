@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/user_details_cl"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.adam.camerawithsaveapi24.UserDetailsActivity">
@@ -10,11 +11,9 @@
         android:id="@+id/udl_tv1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="328dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="50dp"
-        android:text="Height"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="Height(cm)"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,9 +23,9 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="153dp"
         android:layout_marginStart="16dp"
-        android:ems="10"
-        android:text="Height"
         android:digits="0123456789."
+        android:ems="10"
+        android:hint="Height"
         android:inputType="number"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -50,10 +49,10 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="153dp"
         android:layout_marginStart="16dp"
-        android:ems="10"
         android:digits="0123456789."
+        android:ems="10"
+        android:hint="weight"
         android:inputType="number"
-        android:text="weight"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/udl_tv2" />
@@ -62,11 +61,9 @@
         android:id="@+id/udl_tv2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="325dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="Weight"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="Weight(kg)"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edl_height_et" />
 
@@ -76,10 +73,10 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="153dp"
         android:layout_marginStart="16dp"
-        android:ems="10"
         android:digits="0123456789"
+        android:ems="10"
+        android:hint="Age"
         android:inputType="number"
-        android:text="Age"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/udl_tv3" />
@@ -106,10 +103,10 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="153dp"
         android:layout_marginStart="16dp"
-        android:ems="10"
         android:digits="0123456789."
+        android:ems="10"
+        android:hint="Goal"
         android:inputType="number"
-        android:text="Goal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edl_tv4" />
@@ -120,7 +117,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="Goal Weight"
+        android:text="Goal Weight(kg)"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edl_age_et" />
 

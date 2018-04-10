@@ -226,7 +226,7 @@ public class MoreInformationActivity extends AppCompatActivity implements View.O
 
         //        Misc
         datetime = new Date();
-        timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+        timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
 
         gatherUserDetails();
         gatherTodaysFood();
@@ -253,7 +253,7 @@ public class MoreInformationActivity extends AppCompatActivity implements View.O
             gender = userDetails.getGender();
             age = userDetails.getAge();
             cals = CalcHarrisBenedictBMRMetric(userDetails.getGender(), userDetails.getHeight(),
-                    userDetails.getWeight(), userDetails.getAge(), userDetails.getActivity_level());
+                    userDetails.getWeight(), userDetails.getAge(), userDetails.getActivity_level(), userDetails.getGoal_weight());
         }
     }
 
@@ -271,7 +271,7 @@ public class MoreInformationActivity extends AppCompatActivity implements View.O
 
 
     private void gatherTodaysFood() {
-        DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timevalue).child("food");
+        DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timevalue);
         logRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -430,12 +430,12 @@ public class MoreInformationActivity extends AppCompatActivity implements View.O
             startActivity(backupIntent);
         } else if (v.getId() == dateback.getId()) {
             datetime = changeDate(datetime, -1);
-            timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+            timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
             gatherTodaysFood();
         } else if (v.getId() == dateforward.getId()) {
             if (!timevalue.equalsIgnoreCase(new SimpleDateFormat("dd-MM-yyyy").format(new Date()))) {
                 datetime = changeDate(datetime, 1);
-                timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+                timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
 
                 gatherTodaysFood();
             }

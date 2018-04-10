@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import static android.view.View.*;
+import static com.adam.camerawithsaveapi24.tools.NutritionCalculator.CalcHarrisBenedictBMRMetric;
 import static com.adam.camerawithsaveapi24.tools.Utility.*;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
@@ -78,7 +79,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private DatabaseReference dbRef;
     private FirebaseUser user;
     private ArrayList<FoodItem> foodItemsList;
-    private Button printButton;
+    private Button noUserBtn;
+    private TextView noUserTV;
 
     private ListView loglist;
     private AdapterLogList adapterLogList;
@@ -86,11 +88,16 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private TextView tvDate, tvCalRem, tvBudgetVal, tvConsVal;
     private ProgressBar calPB;
 
+    private int age;
+    private double cals;
+    private String gender;
+
     private final int places = 0;
     private ArrayList<FoodItem> quickListArray = new ArrayList();
 
 
-    private double dailyCarb, dailyCal, dailyChol, dailyFib, dailyPro, dailySatFat, dailyTotFat, calRec;
+    private double dailyCarb, dailyCal, dailyChol,
+            dailyFib, dailyPro, dailySatFat, dailyTotFat, calRec;
 
     private LinearLayout progAdd;
     private LayoutInflater inflater;
@@ -113,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                     if (mAuth.getCurrentUser() != null) {
                         Intent moreInfoIntent = new Intent(MainActivity.this, MoreInformationActivity.class);
                         startActivity(moreInfoIntent);
+
                     } else {
                         dispatchSignInIntent();
                     }
@@ -155,6 +163,11 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_bottom_nav);
 
+        noUserTV = findViewById(R.id.no_user_tv);
+        noUserBtn = findViewById(R.id.no_user_btn);
+        noUserBtn.setOnClickListener(this);
+
+
         //views
         includeLayout = findViewById(R.id.include_botnav);
         tvBudgetVal = includeLayout.findViewById(R.id.tv_budget_val);
@@ -184,15 +197,18 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         user = mAuth.getCurrentUser();
 
         //calculates and sets the recommended calories
-        calRec = getRecCal();
+        //        calRec = getRecCal();
 
 //        Misc
         datetime = new Date();
-        timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+        timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
         tvDate.setText(timevalue);
         if (user != null) {
             gatherTodaysFood();
             gatherUserDetails();
+        }else{
+            noUserBtn.setVisibility(VISIBLE);
+            noUserTV.setVisibility(VISIBLE);
         }
         try {
             createFoodLogFile();
@@ -217,6 +233,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             }
         };
 
+
+//        initialiseUserItems();
 
     }
 
@@ -244,6 +262,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                         foodItem.setFood_name(ds.getKey());
                         System.out.println(foodItem);
                         quickListArray.add(foodItem);
+                        System.out.println(quickListArray);
                         AdapterQuickList adapterQuickList = new AdapterQuickList(MainActivity.this, 0, quickListArray);
                         quickListView.setAdapter(adapterQuickList);
                     }
@@ -291,17 +310,17 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     private void sendDataToFB(final FoodItem item) {
         System.out.println(item);
-        final String timeNow = new SimpleDateFormat("dd-MM-yyyy").format(new Date());
-        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name());
+        final String timeNow = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name());
 
         child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     FoodItem tFood = (dataSnapshot.getValue(FoodItem.class));
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).child("servings").setValue(tFood.getServings() + 1);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("servings").setValue(tFood.getServings() + 1);
                 } else {
-                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child("food").child(item.getFood_name()).setValue(item);
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).setValue(item);
                 }
             }
 
@@ -312,6 +331,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         });
 
     }
+    
 
     private void launchAddMoreDialog() {
         final Dialog addMoreDialog = new Dialog(this);
@@ -342,6 +362,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         intent.putExtra("searchTerm", searchTerm);
         intent.putExtra("fpath", "placeholder");
         startActivity(intent);
+
     }
 
     private void launchTypedSearchDialog() {
@@ -365,6 +386,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             public void onClick(DialogInterface dialog, int which) {
                 Intent runaway = new Intent(MainActivity.this, MainActivity.class);
                 startActivity(runaway);
+
             }
         });
 
@@ -375,23 +397,25 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     protected void dispatchSignInIntent() {
         Intent signInIntent = new Intent(this, SignInActivity.class);
         startActivity(signInIntent);
+
     }
 
     protected void dispatchSignOutIntent() {
         Intent signOutIntent = new Intent(this, AccountManagementActivity.class);
         startActivity(signOutIntent);
+
     }
 
     private void dispatchSignUpIntent() {
         Intent signUpIntent = new Intent(this, SignUpActivity.class);
         startActivity(signUpIntent);
+
     }
 
 
     @Override
     protected void onStart() {
         super.onStart();
-//        updateUI(user);
 
         if (user != null) {
 
@@ -401,23 +425,24 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     }
 
     protected double getRecCal() {
-//        TODO: Calculate recommended calories height/weight or w/e
-        return 2000;
+        return cals;
     }
 
     private void gatherTodaysFood() {
-        DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timevalue).child("food");
-        logRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                extractFoodLog(dataSnapshot);
-            }
+        if(user != null) {
+            DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timevalue);
+            logRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    extractFoodLog(dataSnapshot);
+                }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
+                }
+            });
+        }
     }
 
     private void gatherUserDetails() {
@@ -437,12 +462,20 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     private void extractUserDetails(DataSnapshot ds) {
         userDetails = ds.getValue(UserDetails.class);
+        if (userDetails != null) {
+            gender = userDetails.getGender();
+            age = userDetails.getAge();
+            cals = CalcHarrisBenedictBMRMetric(userDetails.getGender(), userDetails.getHeight(),
+                    userDetails.getWeight(), userDetails.getAge(), userDetails.getActivity_level(), userDetails.getGoal_weight());
+        }else{
+            Intent getdets = new Intent(this, UserDetailsActivity.class);
+            startActivity(getdets);
+        }
+        updateUI();
     }
 
 
-    public void createTVs() {
-//TODO: ??
-    }
+
 
     public void extractFoodLog(DataSnapshot dataSnapshot) {
         foodItemsList.clear();
@@ -466,8 +499,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private void updateUI() {
         tvDate.setText(timevalue);
         tvConsVal.setText(String.valueOf(roundSafely(dailyCal, places)));
-        tvCalRem.setText(String.valueOf(roundSafely((calRec - dailyCal), places)));
-        tvBudgetVal.setText(String.valueOf(roundSafely(calRec, places)));
+        tvCalRem.setText(String.valueOf(roundSafely((cals - dailyCal), places)));
+        tvBudgetVal.setText(String.valueOf(roundSafely(cals, places)));
     }
 
 
@@ -541,12 +574,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         return file.exists();
     }
 
-//    private void updateUI(FirebaseUser firebaseUser) {
-//        if (firebaseUser != null) {
-////            mTextMessage.setText(firebaseUser.getEmail().toString());
-//        }
-//    }
-
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -567,6 +594,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+
             }
         }
     }
@@ -604,6 +632,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             displayPhotoIntent.putExtra("fpath", mCurrentPhotoPath);
             startActivity(displayPhotoIntent);
 
+
             // ScanFile so it will be appeared on Gallery
 //            MediaScannerConnection.scanFile(MainActivity.this,
 //                    new String[]{imageUri.getPath()}, null,
@@ -621,15 +650,18 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         if (i == dateminus.getId()) {
             datetime = changeDate(datetime, -1);
-            timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+            timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
             dateChanged();
         } else if (i == dateplus.getId()) {
             //if date is today don't advance
-            if (!timevalue.equalsIgnoreCase(new SimpleDateFormat("dd-MM-yyyy").format(new Date()))) {
+            if (!timevalue.equalsIgnoreCase(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))) {
                 datetime = changeDate(datetime, 1);
-                timevalue = new SimpleDateFormat("dd-MM-yyyy").format(datetime);
+                timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
                 dateChanged();
             }
+        }else if(i==noUserBtn.getId()){
+            Intent signin = new Intent(this, SignInActivity.class);
+            startActivity(signin);
         }
     }
 }
