@@ -331,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         });
 
     }
-    
+
 
     private void launchAddMoreDialog() {
         final Dialog addMoreDialog = new Dialog(this);
@@ -491,11 +491,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         loglist.setAdapter(adapterLogList);
     }
 
-    //    TODO: remove extra function call unless more code added to this function
-    private void dateChanged() {
-        gatherTodaysFood();
-    }
-
     private void updateUI() {
         tvDate.setText(timevalue);
         tvConsVal.setText(String.valueOf(roundSafely(dailyCal, places)));
@@ -651,13 +646,13 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         if (i == dateminus.getId()) {
             datetime = changeDate(datetime, -1);
             timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
-            dateChanged();
+            gatherTodaysFood();
         } else if (i == dateplus.getId()) {
             //if date is today don't advance
             if (!timevalue.equalsIgnoreCase(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))) {
                 datetime = changeDate(datetime, 1);
                 timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
-                dateChanged();
+                gatherTodaysFood();
             }
         }else if(i==noUserBtn.getId()){
             Intent signin = new Intent(this, SignInActivity.class);
