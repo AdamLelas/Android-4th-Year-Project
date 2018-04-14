@@ -25,7 +25,10 @@ public class AccountManagementActivity extends AppCompatActivity implements View
         outButton.setOnClickListener(this);
         userDetailsButton = findViewById(R.id.edit_details_bt);
         userDetailsButton.setOnClickListener(this);
-        mAuth = FirebaseAuth.getInstance();
+
+        if(isNetworkAvailable()) {
+            mAuth = FirebaseAuth.getInstance();
+        }
     }
 
     private void editDetails(){
