@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import com.adam.camerawithsaveapi24.R;
 
 import clarifai2.api.ClarifaiBuilder;
-import clarifai2.api.ClarifaiClient;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import timber.log.Timber;
@@ -15,21 +14,21 @@ import timber.log.Timber;
 import java.util.concurrent.TimeUnit;
 
 //Clarifai client builder
-public class App extends Application {
+public class ClarifaiClient extends Application {
 
-    private static App INSTANCE;
+    private static ClarifaiClient INSTANCE;
 
     @NonNull
-    public static App get() {
-        final App instance = INSTANCE;
+    public static ClarifaiClient get() {
+        final ClarifaiClient instance = INSTANCE;
         if (instance == null) {
-            throw new IllegalStateException("App has not been created yet!");
+            throw new IllegalStateException("ClarifaiClient has not been created yet!");
         }
         return instance;
     }
 
     @Nullable
-    private ClarifaiClient client;
+    private clarifai2.api.ClarifaiClient client;
 
     @Override
     public void onCreate() {
@@ -58,8 +57,8 @@ public class App extends Application {
     }
 
     @NonNull
-    public ClarifaiClient clarifaiClient() {
-        final ClarifaiClient client = this.client;
+    public clarifai2.api.ClarifaiClient clarifaiClient() {
+        final clarifai2.api.ClarifaiClient client = this.client;
         if (client == null) {
             throw new IllegalStateException("Cannot use Clarifai client before initialized");
         }

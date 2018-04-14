@@ -38,7 +38,7 @@ import android.widget.TextView;
 
 import com.adam.camerawithsaveapi24.classes.FoodItem;
 import com.adam.camerawithsaveapi24.tools.AdapterConfirmItemsList;
-import com.adam.camerawithsaveapi24.tools.App;
+import com.adam.camerawithsaveapi24.tools.ClarifaiClient;
 import com.adam.camerawithsaveapi24.tools.NutritionSingleton;
 import com.adam.camerawithsaveapi24.tools.Utility;
 import com.android.volley.AuthFailureError;
@@ -836,7 +836,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             @Override
             protected ClarifaiResponse<List<ClarifaiOutput<Concept>>> doInBackground(Void... params) {
                 // The default Clarifai model that identifies concepts in images
-                final ConceptModel model = App.get().clarifaiClient().getDefaultModels().foodModel();
+                final ConceptModel model = ClarifaiClient.get().clarifaiClient().getDefaultModels().foodModel();
 
                 // Use this model to predict, with the image that the user just selected as the input
                 return model.predict()

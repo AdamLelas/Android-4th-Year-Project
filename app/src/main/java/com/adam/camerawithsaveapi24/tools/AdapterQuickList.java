@@ -35,7 +35,6 @@ public class AdapterQuickList extends ArrayAdapter<FoodItem> {
     public static class ViewHolder {
         public TextView food_name;
         public TextView calories;
-//        public TextView servings;
     }
 
     public View getView(int position, View convertView, ViewGroup parent){
@@ -48,8 +47,6 @@ public class AdapterQuickList extends ArrayAdapter<FoodItem> {
                 holder = new ViewHolder();
                 holder.food_name = vi.findViewById(R.id.lv_conf_item_name_tv);
                 holder.calories = vi.findViewById(R.id.lv_conf_item_calories_tv);
-//                holder.servings = vi.findViewById(R.id.lv_conf_item_servingsize_tv);
-
                 vi.setTag(holder);
             }
             else
@@ -59,8 +56,6 @@ public class AdapterQuickList extends ArrayAdapter<FoodItem> {
 
             holder.food_name.setText(list.get(position).getFood_name());
             holder.calories.setText(formatDouble(list.get(position).getCalories()));
-//            holder.servings.setText(formatDouble(list.get(position).getServings()));
-
         }catch (Exception e){
             e.printStackTrace();
         }
