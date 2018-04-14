@@ -49,6 +49,7 @@ public class Utility {
     }
 
 
+
     /**
      * divides all values by the serving weight to get the values for 1 gram of the food
      */
@@ -115,7 +116,6 @@ public class Utility {
         rv.setPotassium(i.getPotassium() * multiple);
         rv.setFiber(i.getFiber() * multiple);
         rv.setSugar(i.getSugar() * multiple);
-        System.out.println("SUGAR SUGAR SUGAR SUGAR SUGAR SUGAR " + rv.getSugar());
         rv.setIron(i.getIron() * multiple);
         rv.setServing_weight_grams(i.getServing_weight_grams() * multiple);
         return rv;

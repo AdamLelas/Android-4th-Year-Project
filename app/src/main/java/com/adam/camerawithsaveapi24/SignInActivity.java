@@ -1,6 +1,9 @@
 package com.adam.camerawithsaveapi24;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -57,20 +60,32 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
         findViewById(R.id.google_sign_in_button).setOnClickListener(this);
         findViewById(R.id.email_sign_in_button).setOnClickListener(this);
 
-
+        if (isNetworkAvailable()) {
 //      START - Google sign in
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build();
 //      END - Google sign in
 
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
+            googleSignInClient = GoogleSignIn.getClient(this, gso);
 
 //      Init FireBaseAuth
-        mAuth = FirebaseAuth.getInstance();
-
+            mAuth = FirebaseAuth.getInstance();
+        }
     }
+
+    /**
+     * Detects if network is available, returns null if no internet access
+     * duplication of method required as it will not work from a static context
+     */
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
 
     @Override
     protected void onStart() {
@@ -106,14 +121,12 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
-//                            FirebaseUser user = mAuth.getCurrentUser();
                             displayBase();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
 //                            Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
                             Toast.makeText(SignInActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-//                            updateUI(null);
                         }
                         hideProgressBar();
                     }
@@ -154,26 +167,17 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithEmail:success");
-//                            FirebaseUser user = mAuth.getCurrentUser();
-//                            updateUI(user);
+                            displayBase();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(SignInActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-//                            updateUI(null);
                         }
-
                         hideProgressBar();
-
                     }
                 });
         // [END sign_in_with_email]
-    }
-
-
-    private void sendVerification() {
-
     }
 
     protected void signOut() {

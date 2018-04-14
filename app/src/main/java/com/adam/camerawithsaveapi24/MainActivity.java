@@ -8,10 +8,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -49,8 +50,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -97,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
 
     private double dailyCarb, dailyCal, dailyChol,
-            dailyFib, dailyPro, dailySatFat, dailyTotFat, calRec;
+            dailyFib, dailyPro, dailySatFat, dailyTotFat;
 
     private LinearLayout progAdd;
     private LayoutInflater inflater;
@@ -105,7 +104,10 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     private View includeLayout;
 
     private SwipeMenuListView quickListView;
-    private SwipeMenuCreator creator;
+    private SwipeMenuCreator creatorQuickList;
+
+    private SwipeMenuListView logListView;
+    private SwipeMenuCreator creatorLogList;
 
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -140,18 +142,29 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                     return true;
 
                 case R.id.navigation_camera:
-
-                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                        dispatchTakePictureIntent();
-                    } else {
-                        if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-                            Toast.makeText(getApplicationContext(), "Permission Needed.", Toast.LENGTH_LONG).show();
+                    if (user != null) {
+                        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            dispatchTakePictureIntent();
+                        } else {
+                            if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                                Toast.makeText(getApplicationContext(), "Permission Needed.", Toast.LENGTH_LONG).show();
+                            }
+                            requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_IMAGE_CAPTURE);
                         }
-                        requestPermissions(new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_IMAGE_CAPTURE);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Login Required", Toast.LENGTH_LONG).show();
+                    }
+
+                    return true;
+
+                case R.id.navigation_add_more:
+                    if (user != null) {
+                        launchAddMoreDialog();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Login Required", Toast.LENGTH_LONG).show();
                     }
                     return true;
-                case R.id.navigation_add_more:
-                    launchAddMoreDialog();
+
             }
             return false;
         }
@@ -161,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.activity_bottom_nav);
+        setContentView(R.layout.activity_main);
 
         noUserTV = findViewById(R.id.no_user_tv);
         noUserBtn = findViewById(R.id.no_user_btn);
@@ -180,10 +193,8 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         dateminus.setOnClickListener(this);
         dateplus = includeLayout.findViewById(R.id.date_plus_bt);
         dateplus.setOnClickListener(this);
-        loglist = includeLayout.findViewById(R.id.log_list_lv);
+        logListView =  includeLayout.findViewById(R.id.log_list_lv);
 
-//        TODO: don't need this?
-        inflater = LayoutInflater.from(this);
 
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
@@ -191,13 +202,12 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         foodItemsList = new ArrayList<>();
 
         //      Firebase
-        mAuth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance();
-        dbRef = database.getReference();
-        user = mAuth.getCurrentUser();
-
-        //calculates and sets the recommended calories
-        //        calRec = getRecCal();
+        if (isNetworkAvailable()) {
+            mAuth = FirebaseAuth.getInstance();
+            database = FirebaseDatabase.getInstance();
+            dbRef = database.getReference();
+            user = mAuth.getCurrentUser();
+        }
 
 //        Misc
         datetime = new Date();
@@ -206,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         if (user != null) {
             gatherTodaysFood();
             gatherUserDetails();
-        }else{
+        } else {
             noUserBtn.setVisibility(VISIBLE);
             noUserTV.setVisibility(VISIBLE);
         }
@@ -216,7 +226,44 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             e.printStackTrace();
         }
 
-        creator = new SwipeMenuCreator() {
+
+        creatorLogList = new SwipeMenuCreator() {
+            @Override
+            public void create(SwipeMenu menu) {
+                SwipeMenuItem deleteItem = new SwipeMenuItem(
+                        getApplicationContext());
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(170);
+                // set a icon
+                deleteItem.setIcon(R.drawable.ic_delete);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+
+        logListView.setMenuCreator(creatorLogList);
+
+        logListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                          deleteItemFromFirebase(foodItemsList.get(position));
+//                        foodItemsList.remove(position);
+//                        updateLogListAdapter();
+                        break;
+                }
+                // false : close the menu; true : not close the menu
+                return false;
+            }
+        });
+
+
+
+        creatorQuickList = new SwipeMenuCreator() {
 
             @Override
             public void create(SwipeMenu menu) {
@@ -234,9 +281,27 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         };
 
 
+
 //        initialiseUserItems();
 
     }
+
+    private void updateLogListAdapter() {
+        adapterLogList = new AdapterLogList(this, 0, foodItemsList);
+        logListView.setAdapter(adapterLogList);
+    }
+
+
+    /**
+     * Detects if network is available, returns null if no internet access
+     */
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
 
     private void launchQuickAddDialog() {
         final Dialog quickDialog = new Dialog(this);
@@ -247,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         final TextView tv = quickDialog.findViewById(R.id.empty_list_tv);
 
 
-        quickListView.setMenuCreator(creator);
+        quickListView.setMenuCreator(creatorQuickList);
         DatabaseReference child = dbRef.child("users").child(user.getUid()).child("user-items");
         child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -362,17 +427,14 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         intent.putExtra("searchTerm", searchTerm);
         intent.putExtra("fpath", "placeholder");
         startActivity(intent);
-
     }
 
     private void launchTypedSearchDialog() {
         AlertDialog.Builder searchDialog = new AlertDialog.Builder(this);
         final EditText et = new EditText(this);
+        et.setId(R.id.search_dialog_et);
         searchDialog.setMessage("Type the name of each item");
-//        searchDialog.setTitle("Title");
-
         searchDialog.setView(et);
-
         searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -380,19 +442,32 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 afterTypedSearch(et_value);
             }
         });
-
         searchDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Intent runaway = new Intent(MainActivity.this, MainActivity.class);
                 startActivity(runaway);
-
             }
         });
-
         searchDialog.show();
     }
 
+    private void deleteItemFromFirebase(final FoodItem item){
+        final DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timevalue).child(item.getFood_name());
+
+        child.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()){
+                    child.setValue(null);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
 
     protected void dispatchSignInIntent() {
         Intent signInIntent = new Intent(this, SignInActivity.class);
@@ -429,7 +504,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     }
 
     private void gatherTodaysFood() {
-        if(user != null) {
+        if (user != null) {
             DatabaseReference logRef = dbRef.child("users").child(user.getUid()).child("log").child(timevalue);
             logRef.addValueEventListener(new ValueEventListener() {
                 @Override
@@ -467,14 +542,12 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             age = userDetails.getAge();
             cals = CalcHarrisBenedictBMRMetric(userDetails.getGender(), userDetails.getHeight(),
                     userDetails.getWeight(), userDetails.getAge(), userDetails.getActivity_level(), userDetails.getGoal_weight());
-        }else{
+        } else {
             Intent getdets = new Intent(this, UserDetailsActivity.class);
             startActivity(getdets);
         }
         updateUI();
     }
-
-
 
 
     public void extractFoodLog(DataSnapshot dataSnapshot) {
@@ -487,8 +560,9 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
             foodItemsList.add(tFood);
         }
         getDailyTotals();
-        adapterLogList = new AdapterLogList(this, 0, foodItemsList);
-        loglist.setAdapter(adapterLogList);
+//        adapterLogList = new AdapterLogList(this, 0, foodItemsList);
+//        loglist.setAdapter(adapterLogList);
+        updateLogListAdapter();
     }
 
     private void updateUI() {
@@ -523,7 +597,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         updateUI();
     }
 
-    //TODO: REMOVE?
+
     private void appendFoodLogFile(String[] strArr) throws IOException {
         String timeNow = new SimpleDateFormat("HH:mm").format(new Date());
         if (todaysLogName != null) {
@@ -654,7 +728,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
                 timevalue = new SimpleDateFormat("yyyy-MM-dd").format(datetime);
                 gatherTodaysFood();
             }
-        }else if(i==noUserBtn.getId()){
+        } else if (i == noUserBtn.getId()) {
             Intent signin = new Intent(this, SignInActivity.class);
             startActivity(signin);
         }

@@ -2,14 +2,16 @@ package com.adam.camerawithsaveapi24;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
@@ -33,7 +35,6 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
 
 import com.adam.camerawithsaveapi24.classes.FoodItem;
 import com.adam.camerawithsaveapi24.tools.AdapterConfirmItemsList;
@@ -96,13 +97,12 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private final int list_size1 = 350, list_size2 = 700, list_size3 = 1050;
 
     private static final String TAG = "PhotoDisplayActivity";
-    private final int ARRAYSIZE = 5;
 
     private String fpath;
     private byte[] imageBytes;
     protected List<Concept> concepts = new ArrayList<>();
     private Button b1, b2, b3;
-    private String milkSelection, sweetenerSelection;
+    private String milkSelection;
     private ArrayList<FoodItem> extrasList = new ArrayList<>();
 
     //radio button dialogs
@@ -140,7 +140,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private EditText servingAmount;
     private int servingAmountValue;
 
-
     private TextView confItemName, botCal, botCarb, botFat, botProtein,
             calVal, totFatVal, satFatVal, cholVal, carbVal,
             fibVal, sugVal, protVal, potasVal;
@@ -152,7 +151,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     private double calValLocal, totFatValLocal, satFatValLocal,
             cholValLocal, carbValLocal, fibValLocal, sugValLocal,
             protValLocal, potasValLocal, servingWeightGramsLocal;
-
 
     //LinearLayout - buttons
     private LinearLayout L11, L12, L13, L21, L22, L23, L31, L32, L33;
@@ -192,12 +190,14 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
 
         //Firebase
-        mAuth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance();
-        dbRef = database.getReference();
-        user = mAuth.getCurrentUser();
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference();
+        if (isNetworkAvailable()) {
+            mAuth = FirebaseAuth.getInstance();
+            database = FirebaseDatabase.getInstance();
+            dbRef = database.getReference();
+            user = mAuth.getCurrentUser();
+            storage = FirebaseStorage.getInstance();
+            storageRef = storage.getReference();
+        }
 
         backToMainArrow = findViewById(R.id.back_arrow_pda_iv);
         backToMainArrow.setOnClickListener(this);
@@ -349,10 +349,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
         selectedItemsListView = findViewById(R.id.selected_items_lv);
 
-
-//        gestureDetector = new GestureDetector(getActivity())
-
-//        TODO: remove
         addedExtrasToFirebase();
 
 
@@ -388,6 +384,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     case 0:
                         System.out.println("Delete item");
                         selectedList.remove(position);
+                        if (selectedList.size() < 1) {
+                            uploadButton.setVisibility(GONE);
+                        }
                         updateAdapter();
                         break;
                 }
@@ -445,7 +444,16 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     }
 
 
-
+    /**
+     * Detects if network is available, returns null if no internet access
+     * duplication of method required as it will not work from a static context
+     */
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
     /*
     * MISCELLANEOUS [END]
     */
@@ -455,23 +463,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     */
     public void sendDataToDataBase(final FoodItem item) {
         final String timeNow = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-//        String hoursNow = new SimpleDateFormat("HH").format(new Date());
-//        final int hoursNowInt = Integer.parseInt(hoursNow);
-//        final String[] mealTypeArray = {"Breakfast", "Lunch", "Dinner", "Snack"};
-//
-//        System.out.println("Hours now int: " + hoursNowInt);
-
-//        int check;
-//        if (hoursNowInt > 6 && hoursNowInt < 12) {
-//            check = 0;
-//        } else if (hoursNowInt < 16) {
-//            check = 1;
-//        } else if (hoursNowInt < 18) {
-//            check = 2;
-//        } else {
-//            check = 3;
-//        }
-
 
         DatabaseReference child = dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name());
 
@@ -487,37 +478,9 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("servings").setValue(tFood.getServings() + servingAmountValue);
                 } else {
                     System.out.println("onDataChange: ELSE");
-
                     dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).setValue(item);
-
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("servings").setValue(item.getServings());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("calories").setValue(item.getCalories());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("protein").setValue(item.getProtein());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("total_fat").setValue(item.getTotal_fat());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("saturated_fat").setValue(item.getSaturated_fat());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("cholesterol").setValue(item.getCholesterol());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("carbs").setValue(item.getCarbs());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("fiber").setValue(item.getFiber());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("serving_weight_grams").setValue(item.getServing_weight_grams());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("iron").setValue(item.getIron());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("sugar").setValue(item.getSugar());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("sodium").setValue(item.getSodium());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("calcium").setValue(item.getCalcium());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_a").setValue(item.getVitamin_a());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b1").setValue(item.getVitamin_b1());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b2").setValue(item.getVitamin_b2());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b3").setValue(item.getVitamin_b3());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b5").setValue(item.getVitamin_b5());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b6").setValue(item.getVitamin_b6());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b9").setValue(item.getVitamin_b9());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_b12").setValue(item.getVitamin_b12());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_c").setValue(item.getVitamin_c());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_d").setValue(item.getVitamin_d());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_e").setValue(item.getVitamin_e());
-//                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("vitamin_k").setValue(item.getVitamin_k());
-
+                    dbRef.child("users").child(user.getUid()).child("log").child(timeNow).child(item.getFood_name()).child("servings").setValue(1);
                 }
-
             }
 
             @Override
@@ -525,7 +488,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
 
             }
         });
-//        }
+
         Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
         startActivity(finished);
         finish();
@@ -1033,6 +996,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         hideButtons();
         uploadButton.setVisibility(GONE);
         selectedItemsListView.setVisibility(GONE);
+        backToMainArrow.setVisibility(GONE);
         imageView.setVisibility(GONE);
     }
 
@@ -1044,6 +1008,7 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         showButtons();
         imageView.setVisibility(VISIBLE);
         selectedItemsListView.setVisibility(VISIBLE);
+        backToMainArrow.setVisibility(VISIBLE);
     }
 
     public void hideLLButtons() {
@@ -1078,11 +1043,15 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
     }
 
     public void goToConfirmationScreen(int val) {
-        selectValue = val;
-        hideAllForConf();
-        showConf();
-        setConfScreenLocalValues(val);
-        setConfScreenTextViews();
+        if (searchInstantNamesArray1.size() < 1) {
+
+        } else {
+            selectValue = val;
+            hideAllForConf();
+            showConf();
+            setConfScreenLocalValues(val);
+            setConfScreenTextViews();
+        }
     }
 
     /*
@@ -1278,6 +1247,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
         sweetdialog.show();
     }
 
+    private void updateItemValues(){
+
+    }
+
     private void updateItemName(String incoming) {
         String n = confItemName.getText().toString();
         confItemName.setText(n + ", with " + incoming);
@@ -1455,26 +1428,19 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                     FoodItem temp = foodItemsList.get(selectValue);
 
                     for (FoodItem i : tempList) {
-                        System.out.println("customizedDrink: ");
-                        System.out.println(i);
                         if (i.getFood_name().equalsIgnoreCase("sugar") && sug != 0) {
-//                            i.setServings(sug);
-                            System.out.println("INSIDE SUGAR IF");
                             System.out.println(convertToXGrams(i, (sug * 5)));
                             temp = combineFoodItems(temp, convertToXGrams(i, (sug * 5)));
                             System.out.println(temp.getSugar());
                         }
                         if (i.getFood_name().equalsIgnoreCase("sweetener") && swtner != 0) {
-//                            i.setServings(swtner);
                             temp = combineFoodItems(temp, convertToXGrams(i, (swtner * 5)));
                         }
                         if (i.getFood_name().equalsIgnoreCase("honey") && hny != 0) {
-//                            i.setServings(hny);
                             System.out.println(convertToXGrams(i, (hny * 5)));
                             temp = combineFoodItems(temp, convertToXGrams(i, (hny * 5)));
                         }
                         if (i.getFood_name().equalsIgnoreCase(milkname) && milkml != 0) {
-//                            i.setServings(1);
                             temp = combineFoodItems(temp, convertToXGrams(i, milkml));
                         }
                     }
@@ -1566,7 +1532,10 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
             sweetvalue = 0;
             sugarvalue = 0;
             honeyvalue = 0;
-
+        } else if (i == backToMainArrow.getId()) {
+            Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
+            startActivity(finished);
+            finish();
         } else if (i == uploadButton.getId()) {
             for (FoodItem item : selectedList) {
                 sendDataToDataBase(item);
@@ -1599,10 +1568,6 @@ public class PhotoDisplayActivity extends AppCompatActivity implements OnClickLi
                 honeyvalue--;
                 honeytv.setText(String.valueOf(honeyvalue));
             }
-        } else if (i == backToMainArrow.getId() ) {
-            Intent finished = new Intent(PhotoDisplayActivity.this, MainActivity.class);
-            startActivity(finished);
-            finish();
         }
 
     }//onclick end

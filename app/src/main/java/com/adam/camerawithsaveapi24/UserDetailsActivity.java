@@ -1,6 +1,9 @@
 package com.adam.camerawithsaveapi24;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -44,12 +47,12 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_details);
-
-        mAuth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance();
-        dbRef = database.getReference();
-        user = mAuth.getCurrentUser();
-
+        if (isNetworkAvailable()) {
+            mAuth = FirebaseAuth.getInstance();
+            database = FirebaseDatabase.getInstance();
+            dbRef = database.getReference();
+            user = mAuth.getCurrentUser();
+        }
         height = findViewById(R.id.edl_height_et);
         weight = findViewById(R.id.edl_weight_et);
         age = findViewById(R.id.edl_age_et);
@@ -85,6 +88,17 @@ public class UserDetailsActivity extends AppCompatActivity implements View.OnCli
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    /**
+     * Detects if network is available, returns null if no internet access
+     * duplication of method required as it will not work from a static context
+     */
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
 

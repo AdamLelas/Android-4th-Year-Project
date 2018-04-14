@@ -1,12 +1,6 @@
 package com.adam.camerawithsaveapi24.classes;
 
 import static com.adam.camerawithsaveapi24.tools.Utility.*;
-
-
-/**
- * Created by Adam on 25/02/2018.
- */
-
 public class FoodItem {
 
     private String food_name;
@@ -292,6 +286,104 @@ public class FoodItem {
 
     public double getServings() {
         return servings;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FoodItem foodItem = (FoodItem) o;
+
+        if (Double.compare(foodItem.getServing_weight_grams(), getServing_weight_grams()) != 0)
+            return false;
+        if (Double.compare(foodItem.getCalories(), getCalories()) != 0) return false;
+        if (Double.compare(foodItem.getTotal_fat(), getTotal_fat()) != 0) return false;
+        if (Double.compare(foodItem.getSaturated_fat(), getSaturated_fat()) != 0) return false;
+        if (Double.compare(foodItem.getCholesterol(), getCholesterol()) != 0) return false;
+        if (Double.compare(foodItem.getSodium(), getSodium()) != 0) return false;
+        if (Double.compare(foodItem.getCarbs(), getCarbs()) != 0) return false;
+        if (Double.compare(foodItem.getFiber(), getFiber()) != 0) return false;
+        if (Double.compare(foodItem.getSugar(), getSugar()) != 0) return false;
+        if (Double.compare(foodItem.getProtein(), getProtein()) != 0) return false;
+        if (Double.compare(foodItem.getPotassium(), getPotassium()) != 0) return false;
+        if (Double.compare(foodItem.getServings(), getServings()) != 0) return false;
+        if (Double.compare(foodItem.getIron(), getIron()) != 0) return false;
+        if (Double.compare(foodItem.getCalcium(), getCalcium()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_a(), getVitamin_a()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_b1(), getVitamin_b1()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_b2(), getVitamin_b2()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_b3(), getVitamin_b3()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_b5(), getVitamin_b5()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_b6(), getVitamin_b6()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_b9(), getVitamin_b9()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_b12(), getVitamin_b12()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_c(), getVitamin_c()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_d(), getVitamin_d()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_e(), getVitamin_e()) != 0) return false;
+        if (Double.compare(foodItem.getVitamin_k(), getVitamin_k()) != 0) return false;
+
+        return getFood_name() != null ? getFood_name().equals(foodItem.getFood_name()) : foodItem.getFood_name() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = getFood_name() != null ? getFood_name().hashCode() : 0;
+        temp = Double.doubleToLongBits(getServing_weight_grams());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getCalories());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getTotal_fat());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getSaturated_fat());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getCholesterol());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getSodium());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getCarbs());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getFiber());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getSugar());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getProtein());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getPotassium());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getServings());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getIron());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getCalcium());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_a());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_b1());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_b2());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_b3());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_b5());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_b6());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_b9());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_b12());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_c());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_d());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_e());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(getVitamin_k());
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
     }
 
     @Override

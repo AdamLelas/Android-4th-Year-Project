@@ -2,11 +2,6 @@ package com.adam.camerawithsaveapi24.classes;
 
 
 public class UserDetails {
-
-    public enum ActivityLevel {
-        Sedentary, Lightly, Moderately, Very, Extremely
-    }
-
     private String username;
     private int age;
     private String gender;

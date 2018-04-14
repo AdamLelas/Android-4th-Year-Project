@@ -187,12 +187,12 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
 
-                <ListView
+                <com.baoyz.swipemenulistview.SwipeMenuListView
                     android:id="@+id/log_list_lv"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent" />
 
-                </ListView>
+
 
             </LinearLayout>
 
@@ -206,7 +206,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        tools:layout_editor_absoluteX="0dp" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <ImageView
         android:id="@+id/date_minus_bt"

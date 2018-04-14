@@ -1,6 +1,9 @@
 package com.adam.camerawithsaveapi24;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -217,10 +220,12 @@ public class MoreInformationActivity extends AppCompatActivity implements View.O
 
 
         //      Firebase
-        mAuth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance();
-        dbRef = database.getReference();
-        user = mAuth.getCurrentUser();
+        if(isNetworkAvailable()) {
+            mAuth = FirebaseAuth.getInstance();
+            database = FirebaseDatabase.getInstance();
+            dbRef = database.getReference();
+            user = mAuth.getCurrentUser();
+        }
 
         foodItemsList = new ArrayList<>();
 
@@ -231,6 +236,18 @@ public class MoreInformationActivity extends AppCompatActivity implements View.O
         gatherUserDetails();
         gatherTodaysFood();
     }
+
+    /**
+     * Detects if network is available, returns null if no internet access
+     * duplication of method required as it will not work from a static context
+     */
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
 
 
     private void gatherUserDetails() {

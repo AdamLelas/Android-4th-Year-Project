@@ -1,7 +1,5 @@
 package com.adam.camerawithsaveapi24;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -19,7 +17,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static org.junit.Assert.*;
 import static org.hamcrest.core.AllOf.allOf;
 
 /**
@@ -36,8 +33,8 @@ public class SignUpActivityTest {
     @Test
     public void clickSignUpAfterFillingInFormCorrectly_showMainActivity() {
         Random r = new Random();
-        int res = r.nextInt(10000-1)+ 0 ;
-        String email = "test"+res+"@gmail.com";
+        int rand = r.nextInt(10000-1)+ 0 ;
+        String email = "test"+rand+"@gmail.com";
         String password = "1234Test";
 
         //find email edit text and type email
@@ -46,7 +43,7 @@ public class SignUpActivityTest {
         //find password edit text and type password
         onView(withId(R.id.password_sign_up_et)).perform(typeText(password), closeSoftKeyboard());
 
-        onView(withId(R.id.sign_up_btn)).perform(click());
+        onView(withId(R.id.email_sign_in_button)).perform(click());
 
         onView(withId(R.id.edl_username_tv))
                 .check(matches(allOf(isDescendantOfA(withId(R.id.user_details_cl)), isDisplayed())));
@@ -73,7 +70,7 @@ public class SignUpActivityTest {
 
     @Test
     public void clickSignUpAfterFillingInFormIncorrectlyPassword_showUserDetails() {
-        String email = "testg@gmail.com";
+        String email = "testacc@gmail.com";
         String password = "12";
 
         //find email edit text and type email
