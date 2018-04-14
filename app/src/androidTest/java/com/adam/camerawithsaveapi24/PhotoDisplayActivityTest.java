@@ -7,9 +7,6 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.*;
 
-/**
- * Created by Adam on 10/04/2018.
- */
 @RunWith(AndroidJUnit4.class)
 public class PhotoDisplayActivityTest {
 

@@ -58,7 +58,7 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
 
 //      buttons
         findViewById(R.id.google_sign_in_button).setOnClickListener(this);
-        findViewById(R.id.email_sign_in_button).setOnClickListener(this);
+        findViewById(R.id.email_signin_button).setOnClickListener(this);
 
         if (isNetworkAvailable()) {
 //      START - Google sign in
@@ -141,13 +141,13 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
     private void showProgressBar() {
         findViewById(R.id.sign_in_progress_bar).setVisibility(VISIBLE);
         findViewById(R.id.google_sign_in_button).setVisibility(GONE);
-        findViewById(R.id.email_sign_in_button).setVisibility(GONE);
+        findViewById(R.id.email_signin_button).setVisibility(GONE);
     }
 
     private void hideProgressBar() {
         findViewById(R.id.sign_in_progress_bar).setVisibility(GONE);
         findViewById(R.id.google_sign_in_button).setVisibility(VISIBLE);
-        findViewById(R.id.email_sign_in_button).setVisibility(VISIBLE);
+        findViewById(R.id.email_signin_button).setVisibility(VISIBLE);
     }
 
 
@@ -223,7 +223,7 @@ public class SignInActivity extends AppCompatActivity implements View.OnClickLis
         if (i == R.id.tvSkipForNowSI) {
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
-        } else if (i == R.id.email_sign_in_button) {
+        } else if (i == R.id.email_signin_button) {
             signInEmailPassword(editTextEmail.getText().toString().trim(),
                     editTextPassword.getText().toString().trim());
         } else if (i == R.id.google_sign_in_button) {
